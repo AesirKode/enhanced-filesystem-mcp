@@ -1,8 +1,8 @@
 # Enhanced Filesystem MCP - Roadmap
 
-**Current Version:** 0.9.0  
-**Total Tools:** 24  
-**Last Updated:** 2026-01-01
+**Current Version:** 0.10.0  
+**Total Tools:** 25  
+**Last Updated:** 2026-01-02
 
 ## Tool Status
 
@@ -34,6 +34,7 @@
 | model_tool | 0.7.0 | Utility | Safetensors/GGUF inspection |
 | yaml_tool | 0.8.0 | Utility | YAML/TOML config operations |
 | diff_tool | 0.9.0 | Utility | Compare files/directories |
+| windows_tool | 0.10.0 | Automation | Windows UI automation (keyboard, mouse, windows) |
 
 ### 🔨 In Progress
 
@@ -70,6 +71,7 @@
 | 0.7.0 | 2026-01 | 1 | model_tool (safetensors/GGUF inspection) |
 | 0.8.0 | 2026-01 | 1 | yaml_tool (YAML/TOML config) |
 | 0.9.0 | 2026-01 | 1 | diff_tool (file/directory compare) |
+| 0.10.0 | 2026-01 | 1 | windows_tool (UI automation) |
 | 1.0.0 | TBD | - | notify_tool (next up) |
 
 ## Architecture Notes
@@ -92,6 +94,7 @@ D:\Projects\enhanced-filesystem-mcp\
 │   │   ├── hash-tools.ts     # hash_tool
 │   │   ├── clipboard-tools.ts # clipboard_tool
 │   │   ├── download-tools.ts # download_tool
+│   │   ├── windows-ops.ts    # windows_tool
 │   │   └── model-ops.ts      # model_tool (in utility-ops.ts + core/model.ts)
 │   └── lib/                  # Shared utilities
 ├── dist/                     # Compiled JS

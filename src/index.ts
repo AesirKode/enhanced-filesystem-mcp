@@ -33,6 +33,7 @@ import { executeDownloadOperation } from './core/download.js';
 import { executeModelOperation } from './core/model.js';
 import { executeYamlOperation } from './core/yaml.js';
 import { executeDiffOperation } from './core/diff.js';
+import { executeWindowsOperation, WindowsToolArgs } from './core/windows.js';
 
 // Tool handlers
 import { setupFileTools } from './tools/file-ops.js';
@@ -48,6 +49,7 @@ import { setupJsonTools } from './tools/json-ops.js';
 import { comfyuiTool, ComfyUIToolArgs } from './tools/comfyui-ops.js';
 import { archiveTool, hashTool, clipboardTool, modelTool, yamlTool, diffTool } from './tools/utility-ops.js';
 import { downloadTool } from './tools/download-ops.js';
+import { windowsTool } from './tools/windows-ops.js';
 
 // Process execution
 import { executeCommand, executePython } from './process/simple-exec.js';
@@ -78,7 +80,7 @@ const fileWriter = new FileWriter(cache);
 const server = new Server(
   {
     name: 'enhanced-filesystem',
-    version: '0.9.0',  // Added diff_tool
+    version: '0.10.0',  // Added windows_tool
   },
   {
     capabilities: {
@@ -127,6 +129,7 @@ function registerTools() {
   tools.push(modelTool);
   tools.push(yamlTool);
   tools.push(diffTool);
+  tools.push(windowsTool);
 }
 
 // List tools handler
@@ -207,6 +210,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await handleYaml(args);
       case 'diff_tool':
         return await handleDiff(args);
+
+      // Windows automation
+      case 'windows_tool':
+        return await handleWindows(args as unknown as WindowsToolArgs);
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -1084,6 +1091,22 @@ async function handleDiff(args: any) {
       content: [{
         type: 'text',
         text: `Diff operation failed: ${error instanceof Error ? error.message : String(error)}`
+      }],
+      isError: true
+    };
+  }
+}
+
+// NEW: Windows automation handler
+async function handleWindows(args: WindowsToolArgs) {
+  try {
+    const result = await executeWindowsOperation(args);
+    return { content: [{ type: 'text', text: result }] };
+  } catch (error) {
+    return {
+      content: [{
+        type: 'text',
+        text: `Windows operation failed: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };
