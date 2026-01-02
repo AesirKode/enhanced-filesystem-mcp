@@ -1,9 +1,9 @@
 # CLAUDE.md - Enhanced Filesystem MCP Server
 
 ## Project Overview
-High-performance MCP (Model Context Protocol) server providing 24 tools for filesystem operations, process execution, AI integration, and utilities.
+High-performance MCP (Model Context Protocol) server providing 26 tools for filesystem operations, process execution, AI integration, and utilities.
 
-**Version:** 0.9.0
+**Version:** 0.10.0
 **Node:** >=20.0.0
 **Type:** ES Modules
 
@@ -44,7 +44,9 @@ src/
 │   ├── download.ts    # URL download manager
 │   ├── model.ts       # ML model file operations
 │   ├── yaml.ts        # YAML parsing/writing
-│   └── diff.ts        # File diff operations
+│   ├── diff.ts        # File diff operations
+│   ├── windows.ts     # Windows automation
+│   └── analysis.ts    # Code analysis
 ├── tools/             # Tool definitions and handlers
 │   ├── file-ops.ts    # efs_read, efs_write, efs_edit, efs_list, efs_info, efs_delete, efs_move
 │   ├── search-ops.ts  # efs_search
@@ -56,6 +58,8 @@ src/
 │   ├── json-ops.ts    # json_tool
 │   ├── comfyui-ops.ts # comfyui_tool
 │   ├── download-ops.ts # download_tool
+│   ├── windows-ops.ts # windows_tool
+│   ├── analysis-ops.ts # analysis_tool
 │   └── utility-ops.ts # archive_tool, hash_tool, clipboard_tool, model_tool, yaml_tool, diff_tool
 └── process/
     └── simple-exec.ts # Shell/Python command execution
@@ -63,13 +67,13 @@ src/
 
 ## Tool Categories
 
-| Category | Tools | Description |
-|----------|-------|-------------|
-| **File** | efs_read, efs_write, efs_edit, efs_list, efs_info, efs_delete, efs_move | Core filesystem operations with caching |
-| **Search** | efs_search, efs_batch, efs_git | Search, batch operations, git integration |
-| **Exec** | efs_exec, efs_python, process_tool | Command execution, Python, GPU/process management |
-| **AI** | ollama_tool, http_tool, json_tool | Ollama LLM, HTTP requests, deep JSON operations |
-| **Utility** | comfyui_tool, archive_tool, hash_tool, clipboard_tool, download_tool, model_tool, yaml_tool, diff_tool | Various utilities |
+| Category    | Tools                                                                                                                                            | Description                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| **File**    | efs_read, efs_write, efs_edit, efs_list, efs_info, efs_delete, efs_move                                                                          | Core filesystem operations with caching           |
+| **Search**  | efs_search, efs_batch, efs_git                                                                                                                   | Search, batch operations, git integration         |
+| **Exec**    | efs_exec, efs_python, process_tool                                                                                                               | Command execution, Python, GPU/process management |
+| **AI**      | ollama_tool, http_tool, json_tool                                                                                                                | Ollama LLM, HTTP requests, deep JSON operations   |
+| **Utility** | comfyui_tool, archive_tool, hash_tool, clipboard_tool, download_tool, model_tool, yaml_tool, diff_tool, windows_tool, analysis_tool, sqlite_tool | Various utilities                                 |
 
 ## Key Dependencies
 - `@modelcontextprotocol/sdk` - MCP server framework

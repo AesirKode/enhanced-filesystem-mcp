@@ -42,24 +42,38 @@ Examples:
 
 Runs Python code directly. Great for quick data analysis, calculations, or file processing.
 
-The code executes in a fresh Python process each time.
-For pandas/numpy, import them in your code.
+Features:
+- Persistent sessions (variables kept between calls)
+- Fresh process for each session
+- Standard output/error capture
 
 Parameters:
 - code: Python code to execute (string)
+- sessionId: Session ID for persistent state (optional)
 - cwd: Working directory (optional)
 - timeout: Timeout in milliseconds (optional, default: 30000)
+- restart: Restart the session (optional)
 
 Examples:
+  1. Simple calculation:
   efs_python({ code: "print(2 + 2)" })
-  efs_python({ code: "import pandas as pd; df = pd.read_csv('data.csv'); print(df.head())" })
-  efs_python({ code: "import json; print(json.dumps({'result': 42}))" })`,
+
+  2. Persistent session:
+  efs_python({ code: "x = 10", sessionId: "analysis" })
+  efs_python({ code: "print(x * 2)", sessionId: "analysis" }) // Output: 20
+
+  3. Data analysis:
+  efs_python({ code: "import pandas as pd; df = pd.read_csv('data.csv'); print(df.head())" })`,
       inputSchema: {
         type: 'object',
         properties: {
           code: {
             type: 'string',
             description: 'Python code to execute',
+          },
+          sessionId: {
+            type: 'string',
+            description: 'Session ID for persistent state (optional)',
           },
           cwd: {
             type: 'string',
@@ -68,6 +82,10 @@ Examples:
           timeout: {
             type: 'number',
             description: 'Timeout in milliseconds (default: 30000)',
+          },
+          restart: {
+            type: 'boolean',
+            description: 'Restart the session (default: false)',
           },
         },
         required: ['code'],
@@ -131,8 +149,8 @@ Examples:
 { operation: 'kill', filter: { port: 8188 } }
 
 9. Start custom command:
-{ 
-  operation: 'start', 
+{
+  operation: 'start',
   command: 'python server.py',
   cwd: 'D:/Projects/myapp',
   waitForPort: 5000

@@ -34,6 +34,8 @@ import { executeModelOperation } from './core/model.js';
 import { executeYamlOperation } from './core/yaml.js';
 import { executeDiffOperation } from './core/diff.js';
 import { executeWindowsOperation, WindowsToolArgs } from './core/windows.js';
+import { executeSqliteOperation } from './tools/sqlite-ops.js';
+import { pythonSessionManager } from './core/python-session.js';
 
 // Tool handlers
 import { setupFileTools } from './tools/file-ops.js';
@@ -50,6 +52,8 @@ import { comfyuiTool, ComfyUIToolArgs } from './tools/comfyui-ops.js';
 import { archiveTool, hashTool, clipboardTool, modelTool, yamlTool, diffTool } from './tools/utility-ops.js';
 import { downloadTool } from './tools/download-ops.js';
 import { windowsTool } from './tools/windows-ops.js';
+import { analysisTool, executeAnalysisOperation } from './tools/analysis-ops.js';
+import { sqliteTool } from './tools/sqlite-ops.js';
 
 // Process execution
 import { executeCommand, executePython } from './process/simple-exec.js';
@@ -96,31 +100,31 @@ const tools: Tool[] = [];
 function registerTools() {
   // File operations
   tools.push(...setupFileTools(cache, executor, config));
-  
+
   // Search operations
   tools.push(...setupSearchTools());
-  
+
   // Batch operations
   tools.push(...setupBatchTools(transactionManager, config));
-  
+
   // Git operations
   tools.push(...setupGitTools(cache, config));
-  
+
   // Process operations (includes efs_exec, efs_python, process_tool)
   tools.push(...setupProcessTools());
-  
+
   // NEW: Ollama operations
   tools.push(...setupOllamaTools());
-  
+
   // NEW: HTTP operations
   tools.push(...setupHttpTools());
-  
+
   // NEW: JSON operations
   tools.push(...setupJsonTools());
-  
+
   // NEW: ComfyUI operations
   tools.push(comfyuiTool);
-  
+
   // NEW: Utility tools (archive, hash, clipboard, download, model, yaml)
   tools.push(archiveTool);
   tools.push(hashTool);
@@ -130,6 +134,8 @@ function registerTools() {
   tools.push(yamlTool);
   tools.push(diffTool);
   tools.push(windowsTool);
+  tools.push(analysisTool);
+  tools.push(sqliteTool);
 }
 
 // List tools handler
@@ -215,6 +221,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'windows_tool':
         return await handleWindows(args as unknown as WindowsToolArgs);
 
+      // Code analysis
+      case 'analysis_tool':
+        return await handleAnalysis(args);
+
+      // SQLite
+      case 'sqlite_tool':
+        return await handleSqlite(args);
+
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
@@ -235,7 +249,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function handleRead(args: any) {
   try {
     const { path: filePath, offset, length, encoding } = args;
-    
+
     const result = await fileReader.read(filePath, {
       offset,
       length,
@@ -272,7 +286,7 @@ async function handleRead(args: any) {
 async function handleWrite(args: any) {
   try {
     const { path: filePath, content, mode, encoding } = args;
-    
+
     const result = await fileWriter.write(filePath, content, {
       mode,
       encoding,
@@ -280,7 +294,7 @@ async function handleWrite(args: any) {
 
     const sizeInKB = (result.bytesWritten / 1024).toFixed(2);
     const sizeInMB = (result.bytesWritten / 1024 / 1024).toFixed(2);
-    
+
     const sizeStr = result.bytesWritten > 1024 * 1024
       ? `${sizeInMB} MB`
       : `${sizeInKB} KB`;
@@ -309,7 +323,7 @@ async function handleWrite(args: any) {
 async function handleEdit(args: any) {
   try {
     const { path: filePath, oldText, newText, count } = args;
-    
+
     const result = await editFile(filePath, {
       oldText,
       newText,
@@ -340,7 +354,7 @@ async function handleEdit(args: any) {
 async function handleList(args: any) {
   try {
     const { path: dirPath, depth, pattern, sortBy } = args;
-    
+
     const entries = await listDirectory(dirPath, {
       depth,
       pattern,
@@ -377,9 +391,9 @@ async function handleList(args: any) {
 async function handleInfo(args: any) {
   try {
     const { path: filePath } = args;
-    
+
     const stats = await fs.stat(filePath);
-    
+
     const info = [
       `Path: ${filePath}`,
       `Type: ${stats.isDirectory() ? 'Directory' : 'File'}`,
@@ -412,7 +426,7 @@ async function handleInfo(args: any) {
 async function handleDelete(args: any) {
   try {
     const { path: filePath, recursive } = args;
-    
+
     if (recursive) {
       await fs.rm(filePath, { recursive: true, force: true });
     } else {
@@ -443,7 +457,7 @@ async function handleDelete(args: any) {
 async function handleMove(args: any) {
   try {
     const { source, destination } = args;
-    
+
     await fs.rename(source, destination);
 
     return {
@@ -469,16 +483,16 @@ async function handleMove(args: any) {
 
 async function handleSearch(args: any) {
   try {
-    const { 
-      path: searchPath, 
-      pattern, 
+    const {
+      path: searchPath,
+      pattern,
       searchType = 'smart',
       filePattern,
       maxResults,
       contextLines,
       caseSensitive
     } = args;
-    
+
     const results = await search(searchPath, {
       pattern,
       searchType,
@@ -542,11 +556,11 @@ async function handleSearch(args: any) {
 async function handleExec(args: any) {
   try {
     const { command, cwd, timeout } = args;
-    
+
     const result = await executeCommand(command, { cwd, timeout });
 
     const output = result.stdout || result.stderr;
-    
+
     return {
       content: [
         {
@@ -613,7 +627,7 @@ async function handleBatch(args: any) {
     output.push(`✅ Batch operation completed successfully`);
     output.push(`Operations: ${result.results.length}`);
     output.push(`\nResults:`);
-    
+
     result.results.forEach((r, i) => {
       output.push(`\n${i + 1}. ${r.op} - ${r.path || r.from || 'N/A'}`);
       if (r.content) {
@@ -650,12 +664,30 @@ async function handleBatch(args: any) {
 
 async function handlePython(args: any) {
   try {
-    const { code, cwd, timeout } = args;
-    
+    const { code, cwd, timeout, sessionId, restart } = args;
+
+    if (sessionId) {
+      if (restart) {
+        pythonSessionManager.killSession(sessionId);
+      }
+
+      const result = await pythonSessionManager.execute(sessionId, code, timeout);
+
+      const output = result.stdout || result.stderr;
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Python Session '${sessionId}':\n\n${output}`,
+          },
+        ],
+      };
+    }
+
     const result = await executePython(code, { cwd, timeout });
 
     const output = result.stdout || result.stderr;
-    
+
     return {
       content: [
         {
@@ -670,6 +702,30 @@ async function handlePython(args: any) {
         {
           type: 'text',
           text: `Error executing Python: ${error instanceof Error ? error.message : String(error)}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleSqlite(args: any) {
+  try {
+    const result = await executeSqliteOperation(args);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: result,
+        },
+      ],
+    };
+  } catch (error) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `SQLite error: ${error instanceof Error ? error.message : String(error)}`,
         },
       ],
       isError: true,
@@ -786,23 +842,23 @@ async function handleJson(args: any) {
 async function handleComfyUI(args: ComfyUIToolArgs) {
   try {
     const client = getComfyUIClient(args.config);
-    
+
     switch (args.operation) {
       case 'status': {
         const [stats, queue] = await Promise.all([
           client.getSystemStats(),
           client.getQueue()
         ]);
-        
+
         const output: string[] = ['=== ComfyUI Status ==='];
-        
+
         // System info
         if (stats.system) {
           output.push(`\nSystem: ${stats.system.os}`);
           output.push(`Python: ${stats.system.python_version}`);
           output.push(`PyTorch: ${stats.system.pytorch_version}`);
         }
-        
+
         // GPU info
         if (stats.devices && stats.devices.length > 0) {
           output.push('\nGPU Devices:');
@@ -813,28 +869,28 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
             output.push(`    VRAM: ${(vramUsed / 1024 / 1024 / 1024).toFixed(2)} / ${(device.vram_total / 1024 / 1024 / 1024).toFixed(2)} GB (${vramPercent}%)`);
           }
         }
-        
+
         // Queue info
         output.push(`\nQueue: ${queue.queue_running?.length || 0} running, ${queue.queue_pending?.length || 0} pending`);
-        
+
         return { content: [{ type: 'text', text: output.join('\n') }] };
       }
-      
+
       case 'queue': {
         let workflow = args.workflow;
-        
+
         // Load from file if path provided
         if (args.workflowPath) {
           const workflowContent = await fs.readFile(args.workflowPath, 'utf-8');
           workflow = JSON.parse(workflowContent);
         }
-        
+
         if (!workflow) {
           throw new Error('Either workflow or workflowPath must be provided');
         }
-        
+
         const result = await client.queuePrompt(workflow);
-        
+
         return {
           content: [{
             type: 'text',
@@ -842,16 +898,16 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
           }]
         };
       }
-      
+
       case 'history': {
         const history = await client.getHistory(args.promptId, args.maxItems || 10);
-        
+
         const output: string[] = ['=== Generation History ==='];
-        
+
         for (const [promptId, entry] of Object.entries(history)) {
           output.push(`\nPrompt: ${promptId}`);
           output.push(`  Status: ${entry.status?.completed ? '✅ Complete' : '⏳ In Progress'}`);
-          
+
           // Count outputs
           let imageCount = 0;
           for (const nodeOutput of Object.values(entry.outputs)) {
@@ -863,15 +919,15 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
             output.push(`  Images: ${imageCount}`);
           }
         }
-        
+
         return { content: [{ type: 'text', text: output.join('\n') }] };
       }
-      
+
       case 'interrupt': {
         await client.interrupt();
         return { content: [{ type: 'text', text: '⏹️ Generation interrupted' }] };
       }
-      
+
       case 'clear': {
         if (args.target === 'queue') {
           await client.clearQueue();
@@ -883,7 +939,7 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
           throw new Error('target must be "queue" or "history"');
         }
       }
-      
+
       case 'upload': {
         if (!args.imagePath) {
           throw new Error('imagePath is required');
@@ -896,7 +952,7 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
           }]
         };
       }
-      
+
       case 'download': {
         if (!args.filename || !args.outputPath) {
           throw new Error('filename and outputPath are required');
@@ -909,10 +965,10 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
         );
         return { content: [{ type: 'text', text: `✅ Image saved to: ${savedPath}` }] };
       }
-      
+
       case 'nodes': {
         const info = await client.getObjectInfo(args.nodeClass);
-        
+
         if (args.nodeClass) {
           // Specific node info
           return {
@@ -932,45 +988,45 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
           };
         }
       }
-      
+
       case 'wait': {
         let workflow = args.workflow;
-        
+
         if (args.workflowPath) {
           const workflowContent = await fs.readFile(args.workflowPath, 'utf-8');
           workflow = JSON.parse(workflowContent);
         }
-        
+
         if (!workflow) {
           throw new Error('Either workflow or workflowPath must be provided');
         }
-        
+
         // Queue the workflow
         const queueResult = await client.queuePrompt(workflow);
-        
+
         // Wait for completion
         await client.waitForPrompt(
           queueResult.prompt_id,
           1000, // poll every 1 second
           args.timeout || 300000 // 5 min default timeout
         );
-        
+
         // Get output images
         const images = await client.getOutputImages(queueResult.prompt_id);
-        
+
         const output: string[] = [
           `✅ Generation complete!`,
           `Prompt ID: ${queueResult.prompt_id}`,
           `\nOutput Images (${images.length}):`
         ];
-        
+
         for (const img of images) {
           output.push(`  - ${img.filename}${img.subfolder ? ` (${img.subfolder})` : ''}`);
         }
-        
+
         return { content: [{ type: 'text', text: output.join('\n') }] };
       }
-      
+
       default:
         throw new Error(`Unknown ComfyUI operation: ${args.operation}`);
     }
@@ -1113,18 +1169,42 @@ async function handleWindows(args: WindowsToolArgs) {
   }
 }
 
+async function handleAnalysis(args: any) {
+  try {
+    const result = await executeAnalysisOperation(args);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: result,
+        },
+      ],
+    };
+  } catch (error) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Analysis failed: ${error instanceof Error ? error.message : String(error)}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
 // Start server
 async function main() {
   console.error('Enhanced Filesystem MCP Server v0.9.0 starting...');
   console.error(`Config: ${JSON.stringify(config, null, 2)}`);
-  
+
   registerTools();
-  
+
   console.error(`Registered ${tools.length} tools`);
-  
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  
+
   console.error('Server ready!');
 }
 

@@ -1,56 +1,60 @@
 # Enhanced Filesystem MCP Server
 
-**Version:** 0.9.0  
-**Status:** ✅ Production - Actively Used  
+**Version:** 0.9.0
+**Status:** ✅ Production - Actively Used
 **Location:** D:\Projects\enhanced-filesystem-mcp\
 
 High-performance MCP server powering Claude's operations on NYX workstation.
 
-## Quick Reference - 24 Tools
+## Quick Reference - 26 Tools
 
 ### File Operations (7)
-| Tool | Purpose |
-|------|---------|
-| `efs_read` | Read with caching & pagination |
-| `efs_write` | Write any size (**NO CHUNKING!**) |
-| `efs_edit` | Surgical find/replace |
-| `efs_list` | Recursive directory listing |
-| `efs_info` | File metadata & stats |
-| `efs_delete` | Safe deletion with backup |
-| `efs_move` | Move/rename files |
+| Tool         | Purpose                           |
+| ------------ | --------------------------------- |
+| `efs_read`   | Read with caching & pagination    |
+| `efs_write`  | Write any size (**NO CHUNKING!**) |
+| `efs_edit`   | Surgical find/replace             |
+| `efs_list`   | Recursive directory listing       |
+| `efs_info`   | File metadata & stats             |
+| `efs_delete` | Safe deletion with backup         |
+| `efs_move`   | Move/rename files                 |
 
 ### Search & Batch (3)
-| Tool | Purpose |
-|------|---------|
+| Tool         | Purpose                         |
+| ------------ | ------------------------------- |
 | `efs_search` | Fast parallel search (16 cores) |
-| `efs_batch` | Atomic multi-file operations |
-| `efs_git` | Git: status, diff, log, blame |
+| `efs_batch`  | Atomic multi-file operations    |
+| `efs_git`    | Git: status, diff, log, blame   |
 
 ### Execution (3)
-| Tool | Purpose |
-|------|---------|
-| `efs_exec` | Execute shell commands |
-| `efs_python` | Execute Python code directly |
+| Tool           | Purpose                       |
+| -------------- | ----------------------------- |
+| `efs_exec`     | Execute shell commands        |
+| `efs_python`   | Execute Python code directly  |
 | `process_tool` | GPU stats, service management |
 
 ### AI & Data Integration (3)
-| Tool | Purpose |
-|------|---------|
+| Tool          | Purpose                                  |
+| ------------- | ---------------------------------------- |
 | `ollama_tool` | Direct Ollama API (list, generate, chat) |
-| `http_tool` | REST API client with downloads |
-| `json_tool` | JSONPath queries, merge, diff |
+| `http_tool`   | REST API client with downloads           |
+| `json_tool`   | JSONPath queries, merge, diff            |
 
-### Workflow & Utility (8)
-| Tool | Purpose |
-|------|---------|
-| `comfyui_tool` | ComfyUI workflow control |
-| `archive_tool` | Zip operations (list, create, extract) |
-| `hash_tool` | File checksums (MD5, SHA256) |
-| `clipboard_tool` | System clipboard (copy, read) |
-| `download_tool` | Smart model downloads |
-| `model_tool` | Safetensors/GGUF inspection |
-| `yaml_tool` | YAML/TOML config operations |
-| `diff_tool` | Compare files/directories ⭐ NEW |
+### Workflow & Utility (10)
+| Tool             | Purpose                                |
+| ---------------- | -------------------------------------- |
+| `comfyui_tool`   | ComfyUI workflow control               |
+| `archive_tool`   | Zip operations (list, create, extract) |
+| `hash_tool`      | File checksums (MD5, SHA256)           |
+| `clipboard_tool` | System clipboard (copy, read)          |
+| `download_tool`  | Smart model downloads                  |
+| `model_tool`     | Safetensors/GGUF inspection            |
+| `yaml_tool`      | YAML/TOML config operations            |
+| `diff_tool`      | Compare files/directories              |
+| `windows_tool`   | Windows UI automation & control        |
+| `analysis_tool`  | Code structure analysis (TS/JS)        |
+| `sqlite_tool`    | SQLite database operations             |
+| `efs_python`     | Python execution (now with sessions!)  |
 
 ## Model Tool - Inspect Without Loading 🔍
 
@@ -135,18 +139,18 @@ Smart downloads from CivitAI, HuggingFace, or direct URLs with:
 - **CivitAI integration** - Fetches model info from their API
 
 ### Auto-Placement Paths
-| Model Type | Destination |
-|------------|-------------|
-| GGUF (LLM) | D:\Models\llm\gguf |
-| Checkpoint (SD1.5) | D:\Models\image\base\sd15 |
-| Checkpoint (SDXL) | D:\Models\image\base\sdxl |
-| Checkpoint (Pony) | D:\Models\image\base\pony |
-| Checkpoint (Flux) | D:\Models\image\flux |
-| LoRA | D:\Models\image\lora\{arch} |
-| VAE | D:\Models\image\vae |
-| ControlNet | D:\Models\image\controlnet |
-| Embeddings | D:\Models\image\embeddings |
-| Upscalers | D:\Models\image\upscale |
+| Model Type         | Destination                 |
+| ------------------ | --------------------------- |
+| GGUF (LLM)         | D:\Models\llm\gguf          |
+| Checkpoint (SD1.5) | D:\Models\image\base\sd15   |
+| Checkpoint (SDXL)  | D:\Models\image\base\sdxl   |
+| Checkpoint (Pony)  | D:\Models\image\base\pony   |
+| Checkpoint (Flux)  | D:\Models\image\flux        |
+| LoRA               | D:\Models\image\lora\{arch} |
+| VAE                | D:\Models\image\vae         |
+| ControlNet         | D:\Models\image\controlnet  |
+| Embeddings         | D:\Models\image\embeddings  |
+| Upscalers          | D:\Models\image\upscale     |
 
 ### Download Examples
 
@@ -236,7 +240,7 @@ npm run build
 
 ## Configuration
 
-**Claude Desktop:** `%APPDATA%\Claude\claude_desktop_config.json`  
+**Claude Desktop:** `%APPDATA%\Claude\claude_desktop_config.json`
 **JanAI:** `%APPDATA%\Jan\data\mcp_config.json`
 
 ```json
@@ -259,5 +263,5 @@ npm run build
 - **Tools:** 24
 
 ---
-**Author:** Built for NYX PC (i7-13700K, 32GB DDR5, RTX 4070 Ti)  
+**Author:** Built for NYX PC (i7-13700K, 32GB DDR5, RTX 4070 Ti)
 **License:** MIT
