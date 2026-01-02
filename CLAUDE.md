@@ -1,7 +1,7 @@
 # CLAUDE.md - Enhanced Filesystem MCP Server
 
 ## Project Overview
-High-performance MCP (Model Context Protocol) server providing 26 tools for filesystem operations, process execution, AI integration, and utilities.
+High-performance MCP (Model Context Protocol) server providing 28 tools for filesystem operations, process execution, AI integration, and utilities.
 
 **Version:** 0.10.0
 **Node:** >=20.0.0

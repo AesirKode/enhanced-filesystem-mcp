@@ -6,7 +6,7 @@
 
 High-performance MCP server powering Claude's operations on NYX workstation.
 
-## Quick Reference - 27 Tools
+## Quick Reference - 28 Tools
 
 ### File Operations (7)
 | Tool         | Purpose                           |
