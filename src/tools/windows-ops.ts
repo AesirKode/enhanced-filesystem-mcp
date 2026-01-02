@@ -1,6 +1,6 @@
 /**
  * Windows Automation Tool
- * 
+ *
  * Gives Claude programmatic control over Windows:
  * - Keyboard: type text, press keys, hotkeys
  * - Mouse: click, move, scroll
@@ -29,6 +29,8 @@ Operations:
 - 'maximize': Maximize window (active or by title)
 - 'close': Close window by title
 - 'active': Get info about active window
+- 'window_info': Get detailed info (pos/size) of a window
+- 'move_window': Move/Resize a window
 - 'screenshot': Capture screen (full or region)
 - 'screen_size': Get screen dimensions
 - 'launch': Launch an application
@@ -83,21 +85,27 @@ Examples:
 16. Close Notepad:
 { operation: 'close', title: 'Notepad' }
 
-17. Screenshot:
+17. Get Window Info:
+{ operation: 'window_info', title: 'Notepad' }
+
+18. Move Window:
+{ operation: 'move_window', title: 'Notepad', x: 0, y: 0, width: 800, height: 600 }
+
+19. Screenshot:
 { operation: 'screenshot', outputPath: 'D:/screenshot.png' }
 
-18. Screenshot region:
+20. Screenshot region:
 { operation: 'screenshot', region: { x: 0, y: 0, width: 800, height: 600 } }
 
-19. Launch app:
+21. Launch app:
 { operation: 'launch', path: 'notepad.exe' }
 
-20. Launch with args:
+22. Launch with args:
 { operation: 'launch', path: 'code', args: 'D:/Projects' }
 
 Key names: enter, tab, escape, backspace, delete, home, end, pageup, pagedown, up, down, left, right, f1-f12, space, printscreen
 Modifiers: ctrl, alt, shift, win`,
-  
+
   inputSchema: {
     type: 'object',
     properties: {
@@ -105,10 +113,10 @@ Modifiers: ctrl, alt, shift, win`,
         type: 'string',
         enum: ['type', 'key', 'hotkey', 'click', 'move', 'scroll', 'cursor',
                'windows', 'focus', 'minimize', 'maximize', 'close', 'active',
-               'screenshot', 'screen_size', 'launch'],
+               'screenshot', 'screen_size', 'launch', 'move_window', 'window_info'],
         description: 'Windows operation to perform'
       },
-      
+
       // Keyboard
       text: {
         type: 'string',
@@ -131,7 +139,7 @@ Modifiers: ctrl, alt, shift, win`,
         type: 'number',
         description: 'Delay in ms before typing'
       },
-      
+
       // Mouse
       x: {
         type: 'number',
@@ -140,6 +148,14 @@ Modifiers: ctrl, alt, shift, win`,
       y: {
         type: 'number',
         description: 'Y coordinate'
+      },
+      width: {
+        type: 'number',
+        description: 'Width (for move_window)'
+      },
+      height: {
+        type: 'number',
+        description: 'Height (for move_window)'
       },
       button: {
         type: 'string',
@@ -159,13 +175,13 @@ Modifiers: ctrl, alt, shift, win`,
         enum: ['up', 'down'],
         description: 'Scroll direction (default: down)'
       },
-      
+
       // Window
       title: {
         type: 'string',
         description: 'Window title pattern (partial match)'
       },
-      
+
       // Screenshot
       outputPath: {
         type: 'string',
@@ -181,7 +197,7 @@ Modifiers: ctrl, alt, shift, win`,
         },
         description: 'Region to capture { x, y, width, height }'
       },
-      
+
       // Launch
       path: {
         type: 'string',

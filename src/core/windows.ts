@@ -13,15 +13,15 @@ const execAsync = promisify(exec);
 
 async function runPowerShell(script: string, timeout = 30000): Promise<string> {
   const tempFile = join(tmpdir(), 'ps_' + Date.now() + '.ps1');
-  
+
   try {
     await fs.writeFile(tempFile, script, 'utf-8');
-    
+
     const { stdout, stderr } = await execAsync(
       'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "' + tempFile + '"',
       { timeout, maxBuffer: 10 * 1024 * 1024 }
     );
-    
+
     if (stderr && !stdout) throw new Error(stderr);
     return stdout.trim();
   } finally {
@@ -37,12 +37,12 @@ export async function typeText(text: string, delay = 0): Promise<string> {
     .replace(/\n/g, '{ENTER}')
     .replace(/\t/g, '{TAB}')
     .replace(/'/g, "''");
-  
+
   let script = 'Add-Type -AssemblyName System.Windows.Forms\n';
   if (delay > 0) script += 'Start-Sleep -Milliseconds ' + delay + '\n';
   script += "[System.Windows.Forms.SendKeys]::SendWait('" + escaped + "')\n";
   script += "Write-Output 'Typed " + text.length + " characters'";
-  
+
   return runPowerShell(script);
 }
 
@@ -58,13 +58,13 @@ export async function pressKey(key: string, modifiers?: string[]): Promise<strin
     f9: '{F9}', f10: '{F10}', f11: '{F11}', f12: '{F12}',
     space: ' '
   };
-  
+
   const keyCode = keyMap[key.toLowerCase()] || key;
-  
+
   if (modifiers?.some(m => m.toLowerCase() === 'win' || m.toLowerCase() === 'windows')) {
     return pressWinKey(key);
   }
-  
+
   let prefix = '';
   if (modifiers) {
     for (const mod of modifiers) {
@@ -74,12 +74,12 @@ export async function pressKey(key: string, modifiers?: string[]): Promise<strin
       else if (m === 'shift') prefix += '+';
     }
   }
-  
+
   const modStr = modifiers ? modifiers.join('+') + '+' : '';
   let script = 'Add-Type -AssemblyName System.Windows.Forms\n';
   script += "[System.Windows.Forms.SendKeys]::SendWait('" + prefix + keyCode + "')\n";
   script += "Write-Output 'Pressed: " + modStr + key + "'";
-  
+
   return runPowerShell(script);
 }
 
@@ -88,7 +88,7 @@ async function pressWinKey(key: string): Promise<string> {
     d: 0x44, e: 0x45, r: 0x52, l: 0x4C, s: 0x53, i: 0x49, tab: 0x09
   };
   const vk = vkMap[key.toLowerCase()] || key.toUpperCase().charCodeAt(0);
-  
+
   const script = [
     '$sig = @"',
     '[DllImport("user32.dll")]',
@@ -102,7 +102,7 @@ async function pressWinKey(key: string): Promise<string> {
     '$keybd::keybd_event(0x5B, 0, 2, [UIntPtr]::Zero)',
     "Write-Output 'Pressed: Win+" + key + "'"
   ].join('\n');
-  
+
   return runPowerShell(script);
 }
 
@@ -120,7 +120,7 @@ export async function moveMouse(x: number, y: number): Promise<string> {
     '[System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(' + x + ', ' + y + ')',
     "Write-Output 'Moved mouse to (" + x + ", " + y + ")'"
   ].join('\n');
-  
+
   return runPowerShell(script);
 }
 
@@ -136,7 +136,7 @@ export async function clickMouse(
     middle: [0x0020, 0x0040]
   };
   const [down, up] = flags[button];
-  
+
   const lines = [
     '$sig = @"',
     '[DllImport("user32.dll")]',
@@ -144,32 +144,32 @@ export async function clickMouse(
     '"@',
     '$mouse = Add-Type -MemberDefinition $sig -Name "Win32Mouse" -Namespace Win32 -PassThru'
   ];
-  
+
   if (x !== undefined && y !== undefined) {
     lines.push('Add-Type -AssemblyName System.Windows.Forms');
     lines.push('[System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(' + x + ', ' + y + ')');
     lines.push('Start-Sleep -Milliseconds 50');
   }
-  
+
   lines.push('Add-Type -AssemblyName System.Windows.Forms');
   lines.push('$pos = [System.Windows.Forms.Cursor]::Position');
-  
+
   for (let i = 0; i < clicks; i++) {
     lines.push('$mouse::mouse_event(' + down + ', 0, 0, 0, [UIntPtr]::Zero)');
     lines.push('Start-Sleep -Milliseconds 50');
     lines.push('$mouse::mouse_event(' + up + ', 0, 0, 0, [UIntPtr]::Zero)');
     if (i < clicks - 1) lines.push('Start-Sleep -Milliseconds 100');
   }
-  
+
   const clickLabel = clicks > 1 ? ' x' + clicks : '';
   lines.push('Write-Output "' + button + ' click' + clickLabel + ' at ($($pos.X), $($pos.Y))"');
-  
+
   return runPowerShell(lines.join('\n'));
 }
 
 export async function scrollMouse(amount = 3, direction: 'up' | 'down' = 'down'): Promise<string> {
   const scrollAmount = direction === 'up' ? amount * 120 : -amount * 120;
-  
+
   const script = [
     '$sig = @"',
     '[DllImport("user32.dll")]',
@@ -179,7 +179,7 @@ export async function scrollMouse(amount = 3, direction: 'up' | 'down' = 'down')
     '$mouse::mouse_event(0x0800, 0, 0, ' + scrollAmount + ', [UIntPtr]::Zero)',
     "Write-Output 'Scrolled " + direction + ' ' + amount + " units'"
   ].join('\n');
-  
+
   return runPowerShell(script);
 }
 
@@ -189,7 +189,7 @@ export async function getCursorPosition(): Promise<{ x: number; y: number }> {
     '$pos = [System.Windows.Forms.Cursor]::Position',
     'Write-Output "$($pos.X),$($pos.Y)"'
   ].join('\n');
-  
+
   const result = await runPowerShell(script);
   const [x, y] = result.split(',').map(Number);
   return { x, y };
@@ -203,7 +203,7 @@ Get-Process | Where-Object { $_.MainWindowTitle } | ForEach-Object {
   Write-Output "$($_.MainWindowHandle)|$($_.MainWindowTitle)|$($_.ProcessName)"
 }
 `;
-  
+
   const result = await runPowerShell(script);
   return result.split('\n').filter(l => l.trim()).map(line => {
     const [handle, title, process] = line.split('|');
@@ -226,7 +226,7 @@ export async function focusWindow(titlePattern: string): Promise<string> {
     '  Write-Output "Focused: $($proc.MainWindowTitle)"',
     '} else { Write-Output "No window found" }'
   ].join('\n');
-  
+
   return runPowerShell(script);
 }
 
@@ -245,7 +245,7 @@ export async function minimizeWindow(titlePattern?: string): Promise<string> {
         '$win::ShowWindow($win::GetForegroundWindow(), 6)',
         'Write-Output "Minimized active window"'
       ].join('\n');
-  
+
   return runPowerShell(script);
 }
 
@@ -264,7 +264,7 @@ export async function maximizeWindow(titlePattern?: string): Promise<string> {
         '$win::ShowWindow($win::GetForegroundWindow(), 3)',
         'Write-Output "Maximized active window"'
       ].join('\n');
-  
+
   return runPowerShell(script);
 }
 
@@ -275,7 +275,45 @@ export async function closeWindow(titlePattern: string): Promise<string> {
     'if ($proc) { $title = $proc.MainWindowTitle; $proc.CloseMainWindow() | Out-Null; Write-Output "Closed: $title" }',
     'else { Write-Output "No window found" }'
   ].join('\n');
-  
+
+  return runPowerShell(script);
+}
+
+export async function moveWindow(titlePattern: string, x: number, y: number, width: number, height: number): Promise<string> {
+  const escaped = titlePattern.replace(/'/g, "''");
+  const script = [
+    '$sig = @"',
+    '[DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);',
+    '"@',
+    '$win = Add-Type -MemberDefinition $sig -Name "Win32Move" -Namespace Win32 -PassThru',
+    "$proc = Get-Process | Where-Object { $_.MainWindowTitle -like '*" + escaped + "*' } | Select-Object -First 1",
+    'if ($proc) {',
+    '  $win::MoveWindow($proc.MainWindowHandle, ' + x + ', ' + y + ', ' + width + ', ' + height + ', $true)',
+    '  Write-Output "Moved: $($proc.MainWindowTitle) to (' + x + ',' + y + ') ' + width + 'x' + height + '"',
+    '} else { Write-Output "No window found" }'
+  ].join('\n');
+
+  return runPowerShell(script);
+}
+
+export async function getWindowInfo(titlePattern: string): Promise<string> {
+  const escaped = titlePattern.replace(/'/g, "''");
+  const script = [
+    '$sig = @"',
+    'public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }',
+    '[DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);',
+    '"@',
+    '$win = Add-Type -MemberDefinition $sig -Name "Win32Info" -Namespace Win32 -PassThru',
+    "$proc = Get-Process | Where-Object { $_.MainWindowTitle -like '*" + escaped + "*' } | Select-Object -First 1",
+    'if ($proc) {',
+    '  $rect = New-Object Win32.Win32Info+RECT',
+    '  $win::GetWindowRect($proc.MainWindowHandle, [ref]$rect) | Out-Null',
+    '  $width = $rect.Right - $rect.Left',
+    '  $height = $rect.Bottom - $rect.Top',
+    '  Write-Output "Title: $($proc.MainWindowTitle)`nProcess: $($proc.ProcessName)`nHandle: $($proc.MainWindowHandle)`nPosition: $($rect.Left),$($rect.Top)`nSize: $width x $height"',
+    '} else { Write-Output "No window found" }'
+  ].join('\n');
+
   return runPowerShell(script);
 }
 
@@ -292,7 +330,7 @@ export async function getActiveWindow(): Promise<{ title: string; process: strin
     '$proc = Get-Process -Id $pid',
     'Write-Output "$hwnd|$($proc.MainWindowTitle)|$($proc.ProcessName)"'
   ].join('\n');
-  
+
   const result = await runPowerShell(script);
   const [handle, title, process] = result.split('|');
   return { handle, title, process };
@@ -305,7 +343,7 @@ export async function takeScreenshot(
   region?: { x: number; y: number; width: number; height: number }
 ): Promise<string> {
   const savePath = (outputPath || join(tmpdir(), 'screenshot_' + Date.now() + '.png')).replace(/\\/g, '\\\\');
-  
+
   const script = region
     ? [
         'Add-Type -AssemblyName System.Windows.Forms',
@@ -332,7 +370,7 @@ export async function takeScreenshot(
         '$bitmap.Dispose()',
         "Write-Output '" + savePath + "'"
       ].join('\n');
-  
+
   return runPowerShell(script);
 }
 
@@ -342,7 +380,7 @@ export async function getScreenSize(): Promise<{ width: number; height: number }
     '$screen = [System.Windows.Forms.Screen]::PrimaryScreen',
     'Write-Output "$($screen.Bounds.Width),$($screen.Bounds.Height)"'
   ].join('\n');
-  
+
   const result = await runPowerShell(script);
   const [width, height] = result.split(',').map(Number);
   return { width, height };
@@ -353,11 +391,11 @@ export async function getScreenSize(): Promise<{ width: number; height: number }
 export async function launchApp(path: string, args?: string, wait = false): Promise<string> {
   const escapedPath = path.replace(/'/g, "''");
   const argsStr = args ? " -ArgumentList '" + args.replace(/'/g, "''") + "'" : '';
-  
+
   const script = wait
     ? "$proc = Start-Process -FilePath '" + escapedPath + "'" + argsStr + " -PassThru -Wait\nWrite-Output 'Launched: " + escapedPath + "'"
     : "Start-Process -FilePath '" + escapedPath + "'" + argsStr + "\nWrite-Output 'Launched: " + escapedPath + "'";
-  
+
   return runPowerShell(script);
 }
 
@@ -366,7 +404,7 @@ export async function launchApp(path: string, args?: string, wait = false): Prom
 export interface WindowsToolArgs {
   operation: 'type' | 'key' | 'hotkey' | 'click' | 'move' | 'scroll' | 'cursor' |
              'windows' | 'focus' | 'minimize' | 'maximize' | 'close' | 'active' |
-             'screenshot' | 'screen_size' | 'launch';
+             'screenshot' | 'screen_size' | 'launch' | 'move_window' | 'window_info';
   text?: string;
   key?: string;
   modifiers?: string[];
@@ -374,6 +412,8 @@ export interface WindowsToolArgs {
   delay?: number;
   x?: number;
   y?: number;
+  width?: number;
+  height?: number;
   button?: 'left' | 'right' | 'middle';
   clicks?: number;
   amount?: number;
@@ -420,6 +460,15 @@ export async function executeWindowsOperation(args: WindowsToolArgs): Promise<st
     case 'close':
       if (!args.title) throw new Error('title is required');
       return closeWindow(args.title);
+    case 'move_window':
+      if (!args.title) throw new Error('title is required');
+      if (args.x === undefined || args.y === undefined || args.width === undefined || args.height === undefined) {
+        throw new Error('x, y, width, and height are required for move_window');
+      }
+      return moveWindow(args.title, args.x, args.y, args.width, args.height);
+    case 'window_info':
+      if (!args.title) throw new Error('title is required');
+      return getWindowInfo(args.title);
     case 'active':
       const active = await getActiveWindow();
       return 'Active Window:\n  Title: ' + active.title + '\n  Process: ' + active.process;
