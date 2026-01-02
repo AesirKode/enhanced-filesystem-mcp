@@ -9,12 +9,27 @@ interface Session {
   resolve?: (value: any) => void;
   reject?: (reason: any) => void;
   timer?: NodeJS.Timeout;
+  lastUsed: number;
 }
 
 export class PythonSessionManager {
   private sessions: Map<string, Session> = new Map();
+  private readonly SESSION_TIMEOUT = 1000 * 60 * 60; // 1 hour
 
-  constructor() {}
+  constructor() {
+    // Periodic cleanup every 10 minutes
+    setInterval(() => this.cleanup(), 1000 * 60 * 10);
+  }
+
+  private cleanup() {
+    const now = Date.now();
+    for (const [id, session] of this.sessions.entries()) {
+      if (now - session.lastUsed > this.SESSION_TIMEOUT) {
+        console.log(`Cleaning up idle Python session: ${id}`);
+        this.killSession(id);
+      }
+    }
+  }
 
   public createSession(id: string, cwd?: string): void {
     if (this.sessions.has(id)) {
@@ -75,7 +90,8 @@ while True:
     const session: Session = {
       id,
       process: proc,
-      buffer: ''
+      buffer: '',
+      lastUsed: Date.now()
     };
 
     proc.stdout?.on('data', (data) => {
@@ -123,6 +139,8 @@ while True:
       this.createSession(id);
       session = this.sessions.get(id)!;
     }
+
+    session.lastUsed = Date.now();
 
     if (session.resolve) {
       throw new Error('Session is busy');
