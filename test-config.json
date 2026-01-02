@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "enhanced-filesystem": {
+      "command": "node",
+      "args": ["D:\\Projects\\enhanced-filesystem-mcp\\dist\\index.js"],
+      "env": {
+        "ALLOWED_DIRS": "D:\\Projects,D:\\Models",
+        "CACHE_SIZE": "100",
+        "MAX_PARALLEL": "16"
+      }
+    }
+  }
+}
