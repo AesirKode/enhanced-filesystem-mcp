@@ -1,12 +1,12 @@
 # Enhanced Filesystem MCP Server
 
-**Version:** 0.9.0
+**Version:** 0.10.0
 **Status:** ✅ Production - Actively Used
 **Location:** D:\Projects\enhanced-filesystem-mcp\
 
 High-performance MCP server powering Claude's operations on NYX workstation.
 
-## Quick Reference - 26 Tools
+## Quick Reference - 27 Tools
 
 ### File Operations (7)
 | Tool         | Purpose                           |
@@ -40,7 +40,7 @@ High-performance MCP server powering Claude's operations on NYX workstation.
 | `http_tool`   | REST API client with downloads           |
 | `json_tool`   | JSONPath queries, merge, diff            |
 
-### Workflow & Utility (10)
+### Workflow & Utility (11)
 | Tool             | Purpose                                |
 | ---------------- | -------------------------------------- |
 | `comfyui_tool`   | ComfyUI workflow control               |
@@ -54,6 +54,7 @@ High-performance MCP server powering Claude's operations on NYX workstation.
 | `windows_tool`   | Windows UI automation & control        |
 | `analysis_tool`  | Code structure analysis (TS/JS)        |
 | `sqlite_tool`    | SQLite database operations             |
+| `ssh_tool`       | SSH client (exec, sftp, shell)         |
 | `efs_python`     | Python execution (now with sessions!)  |
 
 ## Model Tool - Inspect Without Loading 🔍

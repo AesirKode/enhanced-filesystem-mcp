@@ -54,6 +54,7 @@ import { downloadTool } from './tools/download-ops.js';
 import { windowsTool } from './tools/windows-ops.js';
 import { analysisTool, executeAnalysisOperation } from './tools/analysis-ops.js';
 import { sqliteTool } from './tools/sqlite-ops.js';
+import { sshTool, executeSshOperation } from './tools/ssh-ops.js';
 
 // Process execution
 import { executeCommand, executePython } from './process/simple-exec.js';
@@ -136,6 +137,7 @@ function registerTools() {
   tools.push(windowsTool);
   tools.push(analysisTool);
   tools.push(sqliteTool);
+  tools.push(sshTool);
 }
 
 // List tools handler
@@ -228,6 +230,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // SQLite
       case 'sqlite_tool':
         return await handleSqlite(args);
+
+      // SSH
+      case 'ssh_tool':
+        return await handleSsh(args);
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -726,6 +732,30 @@ async function handleSqlite(args: any) {
         {
           type: 'text',
           text: `SQLite error: ${error instanceof Error ? error.message : String(error)}`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+async function handleSsh(args: any) {
+  try {
+    const result = await executeSshOperation(args);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: result,
+        },
+      ],
+    };
+  } catch (error) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `SSH error: ${error instanceof Error ? error.message : String(error)}`,
         },
       ],
       isError: true,

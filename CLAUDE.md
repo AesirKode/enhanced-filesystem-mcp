@@ -46,7 +46,9 @@ src/
 │   ├── yaml.ts        # YAML parsing/writing
 │   ├── diff.ts        # File diff operations
 │   ├── windows.ts     # Windows automation
-│   └── analysis.ts    # Code analysis
+│   ├── analysis.ts    # Code analysis
+│   ├── sqlite.ts      # SQLite operations
+│   └── ssh.ts         # SSH client
 ├── tools/             # Tool definitions and handlers
 │   ├── file-ops.ts    # efs_read, efs_write, efs_edit, efs_list, efs_info, efs_delete, efs_move
 │   ├── search-ops.ts  # efs_search
@@ -60,6 +62,8 @@ src/
 │   ├── download-ops.ts # download_tool
 │   ├── windows-ops.ts # windows_tool
 │   ├── analysis-ops.ts # analysis_tool
+│   ├── sqlite-ops.ts  # sqlite_tool
+│   ├── ssh-ops.ts     # ssh_tool
 │   └── utility-ops.ts # archive_tool, hash_tool, clipboard_tool, model_tool, yaml_tool, diff_tool
 └── process/
     └── simple-exec.ts # Shell/Python command execution
@@ -67,13 +71,13 @@ src/
 
 ## Tool Categories
 
-| Category    | Tools                                                                                                                                            | Description                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
-| **File**    | efs_read, efs_write, efs_edit, efs_list, efs_info, efs_delete, efs_move                                                                          | Core filesystem operations with caching           |
-| **Search**  | efs_search, efs_batch, efs_git                                                                                                                   | Search, batch operations, git integration         |
-| **Exec**    | efs_exec, efs_python, process_tool                                                                                                               | Command execution, Python, GPU/process management |
-| **AI**      | ollama_tool, http_tool, json_tool                                                                                                                | Ollama LLM, HTTP requests, deep JSON operations   |
-| **Utility** | comfyui_tool, archive_tool, hash_tool, clipboard_tool, download_tool, model_tool, yaml_tool, diff_tool, windows_tool, analysis_tool, sqlite_tool | Various utilities                                 |
+| Category    | Tools                                                                                                                                                      | Description                                       |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| **File**    | efs_read, efs_write, efs_edit, efs_list, efs_info, efs_delete, efs_move                                                                                    | Core filesystem operations with caching           |
+| **Search**  | efs_search, efs_batch, efs_git                                                                                                                             | Search, batch operations, git integration         |
+| **Exec**    | efs_exec, efs_python, process_tool                                                                                                                         | Command execution, Python, GPU/process management |
+| **AI**      | ollama_tool, http_tool, json_tool                                                                                                                          | Ollama LLM, HTTP requests, deep JSON operations   |
+| **Utility** | comfyui_tool, archive_tool, hash_tool, clipboard_tool, download_tool, model_tool, yaml_tool, diff_tool, windows_tool, analysis_tool, sqlite_tool, ssh_tool | Various utilities                                 |
 
 ## Key Dependencies
 - `@modelcontextprotocol/sdk` - MCP server framework
