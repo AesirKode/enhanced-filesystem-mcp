@@ -1,12 +1,12 @@
 # Enhanced Filesystem MCP - Roadmap
 
 **Current Version:** 0.10.0  
-**Total Tools:** 25  
+**Total Tools:** 28  
 **Last Updated:** 2026-01-02
 
 ## Tool Status
 
-### ✅ Complete (24 tools)
+### ✅ Complete (28 tools)
 
 | Tool | Version | Category | Description |
 |------|---------|----------|-------------|
@@ -35,6 +35,9 @@
 | yaml_tool | 0.8.0 | Utility | YAML/TOML config operations |
 | diff_tool | 0.9.0 | Utility | Compare files/directories |
 | windows_tool | 0.10.0 | Automation | Windows UI automation (keyboard, mouse, windows) |
+| analysis_tool | 0.10.0 | Advanced | Code analysis & metrics |
+| sqlite_tool | 0.10.0 | Advanced | SQLite database operations |
+| ssh_tool | 0.10.0 | Advanced | SSH/SFTP remote operations |
 
 ### 🔨 In Progress
 
@@ -71,7 +74,7 @@
 | 0.7.0 | 2026-01 | 1 | model_tool (safetensors/GGUF inspection) |
 | 0.8.0 | 2026-01 | 1 | yaml_tool (YAML/TOML config) |
 | 0.9.0 | 2026-01 | 1 | diff_tool (file/directory compare) |
-| 0.10.0 | 2026-01 | 1 | windows_tool (UI automation) |
+| 0.10.0 | 2026-01 | 4 | windows_tool, analysis_tool, sqlite_tool, ssh_tool |
 | 1.0.0 | TBD | - | notify_tool (next up) |
 
 ## Architecture Notes
