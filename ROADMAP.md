@@ -1,8 +1,8 @@
 # Enhanced Filesystem MCP - Roadmap
 
-**Current Version:** 0.10.0  
-**Total Tools:** 28  
-**Last Updated:** 2026-01-02
+**Current Version:** 0.10.1  
+**Total Tools:** 28 (comfyui_tool now includes agent operation)  
+**Last Updated:** 2026-01-08
 
 ## Tool Status
 
@@ -75,6 +75,7 @@
 | 0.8.0 | 2026-01 | 1 | yaml_tool (YAML/TOML config) |
 | 0.9.0 | 2026-01 | 1 | diff_tool (file/directory compare) |
 | 0.10.0 | 2026-01 | 4 | windows_tool, analysis_tool, sqlite_tool, ssh_tool |
+| 0.10.1 | 2026-01 | 0 | comfyui_tool agent operation (LLM-powered image generation) |
 | 1.0.0 | TBD | - | notify_tool (next up) |
 
 ## Architecture Notes

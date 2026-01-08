@@ -1,6 +1,7 @@
 /**
  * ComfyUI API Client
  * Direct integration with ComfyUI server
+ * Enhanced with full API coverage
  */
 
 import * as http from 'http';
@@ -22,14 +23,21 @@ export interface QueueStatus {
 export interface SystemStats {
   system: {
     os: string;
+    ram_total: number;
+    ram_free: number;
+    comfyui_version: string;
     python_version: string;
     pytorch_version: string;
+    embedded_python: boolean;
   };
   devices: Array<{
     name: string;
     type: string;
+    index: number;
     vram_total: number;
     vram_free: number;
+    torch_vram_total: number;
+    torch_vram_free: number;
   }>;
 }
 
@@ -46,6 +54,32 @@ export interface WorkflowResult {
   prompt_id: string;
   number: number;
   node_errors?: Record<string, any>;
+}
+
+export interface ModelInfo {
+  name: string;
+  pathIndex: number;
+  modified: number;
+  created: number;
+  size: number;
+}
+
+export interface Job {
+  id: string;
+  status: string;
+  created_at?: number;
+  execution_duration?: number;
+  workflow_id?: string;
+}
+
+export interface JobsResponse {
+  jobs: Job[];
+  pagination: {
+    offset: number;
+    limit: number | null;
+    total: number;
+    has_more: boolean;
+  };
 }
 
 const DEFAULT_CONFIG: ComfyUIConfig = {
@@ -157,8 +191,9 @@ export class ComfyUIClient {
   /**
    * Interrupt current generation
    */
-  async interrupt(): Promise<void> {
-    await this.request<void>('POST', '/interrupt');
+  async interrupt(promptId?: string): Promise<void> {
+    const body = promptId ? { prompt_id: promptId } : {};
+    await this.request<void>('POST', '/interrupt', body);
   }
 
   /**
@@ -166,6 +201,13 @@ export class ComfyUIClient {
    */
   async clearQueue(): Promise<void> {
     await this.request<void>('POST', '/queue', { clear: true });
+  }
+
+  /**
+   * Delete specific item from queue
+   */
+  async deleteQueueItem(promptId: string): Promise<void> {
+    await this.request<void>('POST', '/queue', { delete: [promptId] });
   }
 
   /**
@@ -204,13 +246,108 @@ export class ComfyUIClient {
     return this.request<string[]>('GET', '/extensions');
   }
 
+  // ============ NEW METHODS ============
+
+  /**
+   * List model folder types (checkpoints, loras, vae, etc.)
+   */
+  async getModelTypes(): Promise<string[]> {
+    return this.request<string[]>('GET', '/models');
+  }
+
+  /**
+   * List models in a specific folder
+   */
+  async getModels(folder: string): Promise<string[] | ModelInfo[]> {
+    return this.request<string[] | ModelInfo[]>('GET', `/models/${folder}`);
+  }
+
+  /**
+   * Get detailed model list with metadata (experimental API)
+   */
+  async getModelsDetailed(folder: string): Promise<ModelInfo[]> {
+    return this.request<ModelInfo[]>('GET', `/experiment/models/${folder}`);
+  }
+
+  /**
+   * Free VRAM by unloading models
+   */
+  async freeMemory(options: { unload_models?: boolean; free_memory?: boolean } = {}): Promise<void> {
+    const body = {
+      unload_models: options.unload_models ?? true,
+      free_memory: options.free_memory ?? true
+    };
+    await this.request<void>('POST', '/free', body);
+  }
+
+  /**
+   * Get safetensors metadata
+   */
+  async getModelMetadata(folder: string, filename: string): Promise<Record<string, any>> {
+    const params = new URLSearchParams({ filename });
+    return this.request<Record<string, any>>('GET', `/view_metadata/${folder}?${params.toString()}`);
+  }
+
+  /**
+   * Get server feature flags
+   */
+  async getFeatures(): Promise<Record<string, any>> {
+    return this.request<Record<string, any>>('GET', '/features');
+  }
+
+  /**
+   * Get jobs with filtering and pagination
+   */
+  async getJobs(options: {
+    status?: string;  // comma-separated: pending,in_progress,completed,failed
+    workflow_id?: string;
+    sort_by?: 'created_at' | 'execution_duration';
+    sort_order?: 'asc' | 'desc';
+    limit?: number;
+    offset?: number;
+  } = {}): Promise<JobsResponse> {
+    const params = new URLSearchParams();
+    if (options.status) params.append('status', options.status);
+    if (options.workflow_id) params.append('workflow_id', options.workflow_id);
+    if (options.sort_by) params.append('sort_by', options.sort_by);
+    if (options.sort_order) params.append('sort_order', options.sort_order);
+    if (options.limit) params.append('limit', options.limit.toString());
+    if (options.offset) params.append('offset', options.offset.toString());
+    
+    const query = params.toString();
+    const endpoint = query ? `/api/jobs?${query}` : '/api/jobs';
+    return this.request<JobsResponse>('GET', endpoint);
+  }
+
+  /**
+   * Get a specific job by ID
+   */
+  async getJob(jobId: string): Promise<Job> {
+    return this.request<Job>('GET', `/api/jobs/${jobId}`);
+  }
+
+  /**
+   * Get workflow templates from custom nodes
+   */
+  async getWorkflowTemplates(): Promise<Record<string, string[]>> {
+    return this.request<Record<string, string[]>>('GET', '/workflow_templates');
+  }
+
+  /**
+   * Get translations/i18n from custom nodes
+   */
+  async getTranslations(): Promise<Record<string, any>> {
+    return this.request<Record<string, any>>('GET', '/i18n');
+  }
+
   /**
    * Upload an image
    */
   async uploadImage(
     imagePath: string,
-    _subfolder?: string,
-    _overwrite: boolean = false
+    subfolder?: string,
+    overwrite: boolean = false,
+    type: 'input' | 'temp' | 'output' = 'input'
   ): Promise<{ name: string; subfolder: string; type: string }> {
     return new Promise((resolve, reject) => {
       const filename = path.basename(imagePath);
@@ -224,13 +361,90 @@ export class ComfyUIClient {
       body += 'Content-Type: application/octet-stream\r\n\r\n';
       
       const bodyStart = Buffer.from(body, 'utf-8');
+      
+      // Add form fields
+      let fields = '';
+      if (subfolder) {
+        fields += `\r\n--${boundary}\r\n`;
+        fields += `Content-Disposition: form-data; name="subfolder"\r\n\r\n`;
+        fields += subfolder;
+      }
+      if (overwrite) {
+        fields += `\r\n--${boundary}\r\n`;
+        fields += `Content-Disposition: form-data; name="overwrite"\r\n\r\n`;
+        fields += 'true';
+      }
+      fields += `\r\n--${boundary}\r\n`;
+      fields += `Content-Disposition: form-data; name="type"\r\n\r\n`;
+      fields += type;
+      
+      const bodyMiddle = Buffer.from(fields, 'utf-8');
       const bodyEnd = Buffer.from(`\r\n--${boundary}--\r\n`, 'utf-8');
-      const fullBody = Buffer.concat([bodyStart, imageData, bodyEnd]);
+      const fullBody = Buffer.concat([bodyStart, imageData, bodyMiddle, bodyEnd]);
 
       const options: http.RequestOptions = {
         hostname: this.config.host,
         port: this.config.port,
         path: '/upload/image',
+        method: 'POST',
+        headers: {
+          'Content-Type': `multipart/form-data; boundary=${boundary}`,
+          'Content-Length': fullBody.length
+        }
+      };
+
+      const req = http.request(options, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch (e) {
+            reject(new Error(`Failed to parse response: ${data}`));
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.write(fullBody);
+      req.end();
+    });
+  }
+
+  /**
+   * Upload a mask for inpainting
+   */
+  async uploadMask(
+    maskPath: string,
+    originalRef: { filename: string; subfolder?: string; type?: string }
+  ): Promise<{ name: string; subfolder: string; type: string }> {
+    return new Promise((resolve, reject) => {
+      const filename = path.basename(maskPath);
+      const maskData = fs.readFileSync(maskPath);
+      
+      const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
+      
+      let body = '';
+      body += `--${boundary}\r\n`;
+      body += `Content-Disposition: form-data; name="image"; filename="${filename}"\r\n`;
+      body += 'Content-Type: application/octet-stream\r\n\r\n';
+      
+      const bodyStart = Buffer.from(body, 'utf-8');
+      
+      // Add original_ref field
+      let fields = '';
+      fields += `\r\n--${boundary}\r\n`;
+      fields += `Content-Disposition: form-data; name="original_ref"\r\n\r\n`;
+      fields += JSON.stringify(originalRef);
+      
+      const bodyMiddle = Buffer.from(fields, 'utf-8');
+      const bodyEnd = Buffer.from(`\r\n--${boundary}--\r\n`, 'utf-8');
+      const fullBody = Buffer.concat([bodyStart, maskData, bodyMiddle, bodyEnd]);
+
+      const options: http.RequestOptions = {
+        hostname: this.config.host,
+        port: this.config.port,
+        path: '/upload/mask',
         method: 'POST',
         headers: {
           'Content-Type': `multipart/form-data; boundary=${boundary}`,
@@ -269,6 +483,42 @@ export class ComfyUIClient {
         filename,
         subfolder,
         type: folderType
+      });
+
+      const options: http.RequestOptions = {
+        hostname: this.config.host,
+        port: this.config.port,
+        path: `/view?${params.toString()}`,
+        method: 'GET'
+      };
+
+      const req = http.request(options, (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', chunk => chunks.push(chunk));
+        res.on('end', () => resolve(Buffer.concat(chunks)));
+      });
+
+      req.on('error', reject);
+      req.end();
+    });
+  }
+
+  /**
+   * Get a preview/thumbnail of an image
+   */
+  async getImagePreview(
+    filename: string,
+    subfolder: string = '',
+    folderType: string = 'output',
+    format: 'webp' | 'jpeg' = 'webp',
+    quality: number = 90
+  ): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const params = new URLSearchParams({
+        filename,
+        subfolder,
+        type: folderType,
+        preview: `${format};${quality}`
       });
 
       const options: http.RequestOptions = {
@@ -363,6 +613,34 @@ export class ComfyUIClient {
     }
     
     return images;
+  }
+
+  /**
+   * Queue workflow and download all output images
+   */
+  async generateAndDownload(
+    workflow: any,
+    outputDir: string,
+    timeout: number = 300000
+  ): Promise<string[]> {
+    // Queue the workflow
+    const result = await this.queuePrompt(workflow);
+    
+    // Wait for completion
+    await this.waitForPrompt(result.prompt_id, 1000, timeout);
+    
+    // Get output images
+    const images = await this.getOutputImages(result.prompt_id);
+    
+    // Download each image
+    const savedPaths: string[] = [];
+    for (const img of images) {
+      const outputPath = path.join(outputDir, img.filename);
+      await this.saveImage(img.filename, outputPath, img.subfolder);
+      savedPaths.push(outputPath);
+    }
+    
+    return savedPaths;
   }
 }
 

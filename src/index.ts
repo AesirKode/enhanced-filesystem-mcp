@@ -885,8 +885,15 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
         // System info
         if (stats.system) {
           output.push(`\nSystem: ${stats.system.os}`);
+          if (stats.system.comfyui_version) {
+            output.push(`ComfyUI: ${stats.system.comfyui_version}`);
+          }
           output.push(`Python: ${stats.system.python_version}`);
           output.push(`PyTorch: ${stats.system.pytorch_version}`);
+          if (stats.system.ram_total) {
+            const ramUsed = stats.system.ram_total - stats.system.ram_free;
+            output.push(`RAM: ${(ramUsed / 1024 / 1024 / 1024).toFixed(2)} / ${(stats.system.ram_total / 1024 / 1024 / 1024).toFixed(2)} GB`);
+          }
         }
 
         // GPU info
@@ -897,6 +904,10 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
             const vramPercent = ((vramUsed / device.vram_total) * 100).toFixed(1);
             output.push(`  ${device.name} (${device.type})`);
             output.push(`    VRAM: ${(vramUsed / 1024 / 1024 / 1024).toFixed(2)} / ${(device.vram_total / 1024 / 1024 / 1024).toFixed(2)} GB (${vramPercent}%)`);
+            if (device.torch_vram_total) {
+              const torchUsed = device.torch_vram_total - device.torch_vram_free;
+              output.push(`    Torch VRAM: ${(torchUsed / 1024 / 1024 / 1024).toFixed(2)} / ${(device.torch_vram_total / 1024 / 1024 / 1024).toFixed(2)} GB`);
+            }
           }
         }
 
@@ -954,8 +965,11 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
       }
 
       case 'interrupt': {
-        await client.interrupt();
-        return { content: [{ type: 'text', text: '⏹️ Generation interrupted' }] };
+        await client.interrupt(args.promptId);
+        const msg = args.promptId 
+          ? `⏹️ Interrupted prompt: ${args.promptId}`
+          : '⏹️ Generation interrupted';
+        return { content: [{ type: 'text', text: msg }] };
       }
 
       case 'clear': {
@@ -974,11 +988,29 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
         if (!args.imagePath) {
           throw new Error('imagePath is required');
         }
-        const result = await client.uploadImage(args.imagePath, args.subfolder);
+        const result = await client.uploadImage(
+          args.imagePath, 
+          args.subfolder,
+          args.overwrite || false,
+          args.uploadType || 'input'
+        );
         return {
           content: [{
             type: 'text',
             text: `✅ Image uploaded!\n\nName: ${result.name}\nSubfolder: ${result.subfolder || '(root)'}\nType: ${result.type}`
+          }]
+        };
+      }
+
+      case 'mask': {
+        if (!args.maskPath || !args.originalRef) {
+          throw new Error('maskPath and originalRef are required');
+        }
+        const result = await client.uploadMask(args.maskPath, args.originalRef);
+        return {
+          content: [{
+            type: 'text',
+            text: `✅ Mask uploaded!\n\nName: ${result.name}\nSubfolder: ${result.subfolder || '(root)'}\nType: ${result.type}`
           }]
         };
       }
@@ -991,9 +1023,24 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
           args.filename,
           args.outputPath,
           args.subfolder || '',
-          'output'
+          args.folderType || 'output'
         );
         return { content: [{ type: 'text', text: `✅ Image saved to: ${savedPath}` }] };
+      }
+
+      case 'preview': {
+        if (!args.filename || !args.outputPath) {
+          throw new Error('filename and outputPath are required');
+        }
+        const previewData = await client.getImagePreview(
+          args.filename,
+          args.subfolder || '',
+          args.folderType || 'output',
+          args.previewFormat || 'webp',
+          args.previewQuality || 90
+        );
+        await fs.writeFile(args.outputPath, previewData);
+        return { content: [{ type: 'text', text: `✅ Preview saved to: ${args.outputPath}` }] };
       }
 
       case 'nodes': {
@@ -1052,6 +1099,184 @@ async function handleComfyUI(args: ComfyUIToolArgs) {
 
         for (const img of images) {
           output.push(`  - ${img.filename}${img.subfolder ? ` (${img.subfolder})` : ''}`);
+        }
+
+        return { content: [{ type: 'text', text: output.join('\n') }] };
+      }
+
+      // ============ NEW OPERATIONS ============
+
+      case 'models': {
+        if (args.modelFolder) {
+          // List models in specific folder
+          const models = await client.getModels(args.modelFolder);
+          const modelList = Array.isArray(models) ? models : [];
+          
+          // Check if detailed format
+          if (modelList.length > 0 && typeof modelList[0] === 'object') {
+            const output: string[] = [`=== ${args.modelFolder} Models (${modelList.length}) ===`];
+            for (const m of modelList as any[]) {
+              const sizeStr = m.size ? ` (${(m.size / 1024 / 1024 / 1024).toFixed(2)} GB)` : '';
+              output.push(`  ${m.name}${sizeStr}`);
+            }
+            return { content: [{ type: 'text', text: output.join('\n') }] };
+          } else {
+            return {
+              content: [{
+                type: 'text',
+                text: `=== ${args.modelFolder} Models (${modelList.length}) ===\n\n${modelList.join('\n')}`
+              }]
+            };
+          }
+        } else {
+          // List model folder types
+          const types = await client.getModelTypes();
+          return {
+            content: [{
+              type: 'text',
+              text: `=== Model Folders ===\n\n${types.join('\n')}`
+            }]
+          };
+        }
+      }
+
+      case 'free': {
+        await client.freeMemory({
+          unload_models: args.unloadModels ?? true,
+          free_memory: args.freeMemory ?? true
+        });
+        return { content: [{ type: 'text', text: '🧹 VRAM freed! Models unloaded.' }] };
+      }
+
+      case 'embeddings': {
+        const embeddings = await client.getEmbeddings();
+        return {
+          content: [{
+            type: 'text',
+            text: `=== Embeddings (${embeddings.length}) ===\n\n${embeddings.join('\n')}`
+          }]
+        };
+      }
+
+      case 'metadata': {
+        if (!args.modelFolder || !args.modelFile) {
+          throw new Error('modelFolder and modelFile are required');
+        }
+        if (!args.modelFile.endsWith('.safetensors')) {
+          throw new Error('modelFile must be a .safetensors file');
+        }
+        const metadata = await client.getModelMetadata(args.modelFolder, args.modelFile);
+        return {
+          content: [{
+            type: 'text',
+            text: `=== Metadata: ${args.modelFile} ===\n\n${JSON.stringify(metadata, null, 2)}`
+          }]
+        };
+      }
+
+      case 'features': {
+        const features = await client.getFeatures();
+        return {
+          content: [{
+            type: 'text',
+            text: `=== Server Features ===\n\n${JSON.stringify(features, null, 2)}`
+          }]
+        };
+      }
+
+      case 'jobs': {
+        if (args.jobId) {
+          // Get specific job
+          const job = await client.getJob(args.jobId);
+          return {
+            content: [{
+              type: 'text',
+              text: `=== Job: ${args.jobId} ===\n\n${JSON.stringify(job, null, 2)}`
+            }]
+          };
+        } else {
+          // List jobs with filtering
+          const result = await client.getJobs({
+            status: args.jobStatus,
+            sort_by: args.jobSortBy,
+            sort_order: args.jobSortOrder,
+            limit: args.jobLimit,
+            offset: args.jobOffset
+          });
+
+          const output: string[] = [`=== Jobs (${result.jobs.length} of ${result.pagination.total}) ===`];
+          
+          for (const job of result.jobs) {
+            output.push(`\n${job.id}: ${job.status}`);
+          }
+
+          if (result.pagination.has_more) {
+            output.push(`\n(More jobs available, use offset=${result.pagination.offset + result.jobs.length})`);
+          }
+
+          return { content: [{ type: 'text', text: output.join('\n') }] };
+        }
+      }
+
+      case 'templates': {
+        const templates = await client.getWorkflowTemplates();
+        const output: string[] = ['=== Workflow Templates ==='];
+        
+        for (const [nodePack, workflows] of Object.entries(templates)) {
+          output.push(`\n${nodePack}:`);
+          for (const wf of workflows) {
+            output.push(`  - ${wf}`);
+          }
+        }
+
+        return { content: [{ type: 'text', text: output.join('\n') }] };
+      }
+
+      case 'agent': {
+        if (!args.agentRequest) {
+          throw new Error('agentRequest is required - describe what image you want to generate');
+        }
+
+        // Import the agent dynamically
+        const { getComfyUIAgent } = await import('./core/comfyui-agent.js');
+        
+        const agent = getComfyUIAgent({
+          llmBackend: args.agentConfig?.llmBackend || 'ollama',
+          llmHost: args.agentConfig?.llmHost || 'localhost',
+          llmPort: args.agentConfig?.llmPort || 11434,
+          llmModel: args.agentConfig?.llmModel || 'dolphin-mistral-nemo',
+          comfyHost: args.config?.host,
+          comfyPort: args.config?.port
+        });
+
+        const result = await agent.generate(args.agentRequest, {
+          checkpoint: args.checkpoint,
+          width: args.width,
+          height: args.height,
+          steps: args.steps,
+          cfg: args.cfgScale,
+          waitForResult: args.agentWait,
+          timeout: args.timeout,
+          outputDir: args.agentOutputDir
+        });
+
+        const output: string[] = ['=== ComfyUI Agent Generation ==='];
+        output.push(`\nRequest: "${args.agentRequest}"`);
+        output.push(`Prompt ID: ${result.promptId}`);
+        output.push(`\n--- Generated Parameters ---`);
+        output.push(`Prompt: ${result.params.prompt}`);
+        output.push(`Negative: ${result.params.negativePrompt || '(default)'}`);
+        output.push(`Size: ${result.params.width || 1024}x${result.params.height || 1024}`);
+        output.push(`Steps: ${result.params.steps || 20}`);
+        output.push(`CFG: ${result.params.cfg || 7}`);
+
+        if (result.images) {
+          output.push(`\n--- Output Images ---`);
+          for (const img of result.images) {
+            output.push(`  ${img}`);
+          }
+        } else {
+          output.push(`\n(Generation queued - use agentWait: true to wait for result)`);
         }
 
         return { content: [{ type: 'text', text: output.join('\n') }] };
