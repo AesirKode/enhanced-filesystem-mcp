@@ -1,23 +1,14 @@
 # Enhanced Filesystem MCP Server
 
 **Version:** 0.10.1
-**Status:** ✅ Production - Actively Used
+**Status:**  Production - Actively Used
 **Total Tools:** 28
 **License:** MIT
 
-High-performance Model Context Protocol (MCP) server providing AI agents with advanced filesystem and automation tools. Optimized for the **NYX Workstation** architecture.
-
+High-performance Model Context Protocol (MCP) server providing AI agents with advanced filesystem and automation tools. 
 ---
 
-## 🖥️ Workstation Specs
-- **CPU:** Intel i7-13700K (16 Cores / 24 Threads)
-- **RAM:** 32GB DDR5 @ 7200 MT/s
-- **GPU:** NVIDIA RTX 4070 Ti (12GB)
-- **OS:** Windows 11 Pro
-
----
-
-## 🛠️ The Toolkit (28 Tools)
+## The Toolkit (28 Tools)
 
 ### File & Search
 | Tool | Purpose |
@@ -38,6 +29,6 @@ High-performance Model Context Protocol (MCP) server providing AI agents with ad
 
 ## 🚀 Build & Install
 ```powershell
-Set-Location -Path "D:\Projects\enhanced-filesystem-mcp"
+Set-Location -Path 
 npm install
 npm run build
