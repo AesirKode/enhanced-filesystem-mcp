@@ -28,7 +28,6 @@ High-performance Model Context Protocol (MCP) server providing AI agents with ad
 ---
 
 ## Build & Install
-```powershell
-Set-Location -Path 
+Set-Location -Path "C:\path\to\enhanced-filesystem-mcp"
 npm install
 npm run build
