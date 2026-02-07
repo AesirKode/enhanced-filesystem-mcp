@@ -7,14 +7,21 @@ dist/
 # Environment
 .env
 .env.local
+.env.*
+
+# Private context (contains local IPs, paths)
+CLAUDE.md
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Logs
 *.log
@@ -23,3 +30,7 @@ npm-debug.log*
 # Cache
 .cache/
 *.tsbuildinfo
+
+# Test artifacts
+coverage/
+.vitest/
