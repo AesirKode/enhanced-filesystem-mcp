@@ -9,8 +9,16 @@ dist/
 .env.local
 .env.*
 
-# Private context (contains local IPs, paths)
+# Private context and project management logs
 CLAUDE.md
+SUCCESS.md
+COMPLETE.md
+STATUS.md
+PROCESS_DESIGN.md
+ACTIVITY.md
+
+# Local build scripts
+build.bat
 
 # IDE
 .vscode/

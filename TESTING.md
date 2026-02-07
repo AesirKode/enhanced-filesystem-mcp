@@ -1,4 +1,4 @@
-# 🧪 Enhanced FS - Quick Test Guide
+# Enhanced FS - Quick Test Guide
 
 ## After Restarting Claude Desktop
 
@@ -89,14 +89,14 @@ Use efs_exec with:
 
 Expected: "Done!" after 2 seconds
 
-## 🎯 What to Look For
+##  What to Look For
 
 ### Success Indicators:
-- ✅ Tools show up in Claude's list
-- ✅ Commands execute and return output
-- ✅ Python code runs with pandas/numpy
-- ✅ Large files write in single call
-- ✅ Timeouts work correctly
+-  Tools show up in Claude's list
+-  Commands execute and return output
+-  Python code runs with pandas/numpy
+-  Large files write in single call
+-  Timeouts work correctly
 
 ### If Something Fails:
 1. Check Claude Desktop logs (in settings)
@@ -104,7 +104,7 @@ Expected: "Done!" after 2 seconds
 3. Verify Python 3 is in PATH
 4. Restart Claude Desktop again
 
-## 📊 Performance to Notice
+##  Performance to Notice
 
 **File Writing:**
 - Old way: Multiple chunks, manual management
@@ -118,7 +118,7 @@ Expected: "Done!" after 2 seconds
 - Old way: start_process → interact → read_output
 - New way: efs_exec → done!
 
-## 🚀 Next Features to Add (Later)
+##  Next Features to Add (Later)
 
 If these work well, we can add:
 1. **efs_edit** - Surgical file editing
