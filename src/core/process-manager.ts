@@ -80,8 +80,8 @@ const SERVICE_PROFILES: Record<string, ServiceProfile> = {
   },
   comfyui: {
     name: 'comfyui',
-    command: 'python main.py --listen --port 8188',
-    cwd: 'D:/Projects/ComfyUI',
+    command: 'venv\\Scripts\\python.exe main.py --listen 0.0.0.0 --port 8188 --highvram',
+    cwd: 'D:/Tools/ComfyUI',
     port: 8188,
     healthCheck: 'http://localhost:8188/system_stats',
   },
