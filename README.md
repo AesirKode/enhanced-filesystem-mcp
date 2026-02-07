@@ -27,7 +27,7 @@ High-performance Model Context Protocol (MCP) server providing AI agents with ad
 
 ---
 
-## 🚀 Build & Install
+## Build & Install
 ```powershell
 Set-Location -Path 
 npm install
