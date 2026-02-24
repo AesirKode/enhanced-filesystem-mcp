@@ -4,51 +4,7 @@ import { sshManager, SshConfig } from '../core/ssh.js';
 
 export const sshTool: Tool = {
   name: 'ssh_tool',
-  description: `SSH client for remote server management.
-
-Operations:
-- 'connect': Establish a persistent connection
-- 'exec': Execute a command on remote server
-- 'upload': Upload file via SFTP
-- 'download': Download file via SFTP
-- 'list': List remote directory contents
-- 'disconnect': Close connection
-
-Parameters:
-- operation: Operation to perform
-- sessionId: Unique ID for the session (required for all operations)
-- host, port, username, password, privateKeyPath: Connection details (for 'connect')
-- command: Command to run (for 'exec')
-- localPath, remotePath: File paths (for 'upload', 'download', 'list')
-
-Examples:
-
-1. Connect:
-{
-  operation: 'connect',
-  sessionId: 'prod-server',
-  host: '192.168.1.10',
-  username: 'admin',
-  privateKeyPath: 'C:/Users/me/.ssh/id_rsa'
-}
-
-2. Execute command:
-{
-  operation: 'exec',
-  sessionId: 'prod-server',
-  command: 'ls -la /var/www'
-}
-
-3. Upload file:
-{
-  operation: 'upload',
-  sessionId: 'prod-server',
-  localPath: 'D:/build/app.zip',
-  remotePath: '/tmp/app.zip'
-}
-
-4. Disconnect:
-{ operation: 'disconnect', sessionId: 'prod-server' }`,
+  description: "SSH client with persistent sessions. Operations: connect (host/username/password or privateKeyPath), exec (run command), upload/download (SFTP), list (remote dir), disconnect. sessionId required for all ops.",
 
   inputSchema: {
     type: 'object',
@@ -58,10 +14,7 @@ Examples:
         enum: ['connect', 'exec', 'upload', 'download', 'list', 'disconnect'],
         description: 'SSH operation'
       },
-      sessionId: {
-        type: 'string',
-        description: 'Session identifier'
-      },
+      sessionId: { type: 'string', description: 'Session identifier' },
       host: { type: 'string' },
       port: { type: 'number', default: 22 },
       username: { type: 'string' },

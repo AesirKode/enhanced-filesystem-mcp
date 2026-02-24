@@ -10,36 +10,38 @@ import * as https from 'https';
 import { URL } from 'url';
 import { createHash } from 'crypto';
 
-// Model directory mappings
+// Model directory mappings — base configurable via MODELS_DIR env var
+const MODELS_BASE = process.env.MODELS_DIR || 'D:\\Models';
+
 const MODEL_PATHS: Record<string, string> = {
   // LLM models
-  'gguf': 'D:\\Models\\llm\\gguf',
-  'llm': 'D:\\Models\\llm\\gguf',
+  'gguf': `${MODELS_BASE}\\llm\\gguf`,
+  'llm': `${MODELS_BASE}\\llm\\gguf`,
   
   // Image model bases by architecture
-  'checkpoint': 'D:\\Models\\image\\base',
-  'sd15': 'D:\\Models\\image\\base\\sd15',
-  'sdxl': 'D:\\Models\\image\\base\\sdxl',
-  'pony': 'D:\\Models\\image\\base\\pony',
-  'flux': 'D:\\Models\\image\\flux',
-  'sd3': 'D:\\Models\\image\\base\\sd3',
+  'checkpoint': `${MODELS_BASE}\\image\\base`,
+  'sd15': `${MODELS_BASE}\\image\\base\\sd15`,
+  'sdxl': `${MODELS_BASE}\\image\\base\\sdxl`,
+  'pony': `${MODELS_BASE}\\image\\base\\pony`,
+  'flux': `${MODELS_BASE}\\image\\flux`,
+  'sd3': `${MODELS_BASE}\\image\\base\\sd3`,
   
   // Image model components
-  'lora': 'D:\\Models\\image\\lora',
-  'lycoris': 'D:\\Models\\image\\lora',
-  'vae': 'D:\\Models\\image\\vae',
-  'controlnet': 'D:\\Models\\image\\controlnet',
-  'embedding': 'D:\\Models\\image\\embeddings',
-  'textual_inversion': 'D:\\Models\\image\\embeddings',
-  'upscaler': 'D:\\Models\\image\\upscale',
-  'ipadapter': 'D:\\Models\\image\\ipadapter',
+  'lora': `${MODELS_BASE}\\image\\lora`,
+  'lycoris': `${MODELS_BASE}\\image\\lora`,
+  'vae': `${MODELS_BASE}\\image\\vae`,
+  'controlnet': `${MODELS_BASE}\\image\\controlnet`,
+  'embedding': `${MODELS_BASE}\\image\\embeddings`,
+  'textual_inversion': `${MODELS_BASE}\\image\\embeddings`,
+  'upscaler': `${MODELS_BASE}\\image\\upscale`,
+  'ipadapter': `${MODELS_BASE}\\image\\ipadapter`,
   
   // Video
-  'video': 'D:\\Models\\video\\base',
-  'motion': 'D:\\Models\\video\\motion',
+  'video': `${MODELS_BASE}\\video\\base`,
+  'motion': `${MODELS_BASE}\\video\\motion`,
   
   // Default
-  'default': 'D:\\Models'
+  'default': MODELS_BASE
 };
 
 export interface DownloadProgress {

@@ -4,68 +4,7 @@ export function setupOllamaTools(): Tool[] {
   return [
     {
       name: 'ollama_tool',
-      description: `Direct Ollama API integration for model management and inference.
-
-Operations:
-- 'list': List all installed models
-- 'show': Show model details (modelfile, parameters, template)
-- 'pull': Download a model from Ollama registry
-- 'delete': Remove a model
-- 'copy': Copy/clone a model with new name
-- 'create': Create model from Modelfile
-- 'generate': Generate completion (single prompt)
-- 'chat': Multi-turn chat conversation
-- 'embeddings': Generate text embeddings
-- 'ps': List models currently loaded in memory
-
-Parameters:
-- operation: Operation to perform (required)
-- model: Model name (required for most operations)
-- prompt: Text prompt (for generate/embeddings)
-- messages: Chat messages array (for chat)
-- options: Generation options (temperature, top_p, etc.)
-- source/destination: For copy operation
-- modelfile/modelfileContent: For create operation
-- config: Optional { host, timeout } overrides
-
-Examples:
-
-1. List models:
-{ operation: 'list' }
-
-2. Show model info:
-{ operation: 'show', model: 'llama3:8b' }
-
-3. Pull a model:
-{ operation: 'pull', model: 'mistral:7b' }
-
-4. Generate completion:
-{ 
-  operation: 'generate', 
-  model: 'llama3:8b', 
-  prompt: 'Explain quantum computing',
-  options: { temperature: 0.7 }
-}
-
-5. Chat conversation:
-{
-  operation: 'chat',
-  model: 'llama3:8b',
-  messages: [
-    { role: 'system', content: 'You are a helpful assistant.' },
-    { role: 'user', content: 'Hello!' }
-  ]
-}
-
-6. Create custom model:
-{
-  operation: 'create',
-  model: 'my-assistant',
-  modelfileContent: 'FROM llama3:8b\\nSYSTEM You are a coding expert.'
-}
-
-7. Check loaded models:
-{ operation: 'ps' }`,
+      description: "Ollama LLM integration. Operations: list (installed models), show (model details), pull (download), delete, copy, create (from Modelfile), generate (single prompt), chat (multi-turn), embeddings, ps (loaded in memory). Config: optional host/timeout overrides.",
       inputSchema: {
         type: 'object',
         properties: {
