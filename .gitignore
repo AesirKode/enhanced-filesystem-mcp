@@ -42,3 +42,6 @@ npm-debug.log*
 # Test artifacts
 coverage/
 .vitest/
+
+# Local MCP config (contains local paths)
+test-config.json
