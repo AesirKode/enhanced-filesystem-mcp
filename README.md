@@ -34,7 +34,7 @@ Add to your `claude_desktop_config.json`:
       "args": ["C:/path/to/enhanced-filesystem-mcp/dist/index.js"],
       "env": {
         "ALLOWED_DIRS": "C:/Users/you/Projects",
-        "MAX_PARALLEL": "16"
+        "MAX_PARALLEL": "20"
       }
     }
   }
@@ -98,7 +98,7 @@ All settings via environment variables:
 | :--- | :--- | :--- |
 | `ALLOWED_DIRS` | *(none)* | Comma-separated allowed directories |
 | `CACHE_SIZE` | `100` | LRU cache entries |
-| `MAX_PARALLEL` | `16` | Max parallel operations |
+| `MAX_PARALLEL` | `20` | Max parallel operations |
 | `MODELS_DIR` | `D:\Models` | Base path for `download_tool` auto-placement |
 
 ---

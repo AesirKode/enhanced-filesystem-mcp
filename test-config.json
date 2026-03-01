@@ -6,7 +6,7 @@
       "env": {
         "ALLOWED_DIRS": "D:\\Projects,D:\\Models",
         "CACHE_SIZE": "100",
-        "MAX_PARALLEL": "16"
+        "MAX_PARALLEL": "20"
       }
     }
   }

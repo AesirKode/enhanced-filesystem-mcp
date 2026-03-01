@@ -64,7 +64,7 @@ interface ServerConfig {
 const config: ServerConfig = {
   allowedDirectories: process.env.ALLOWED_DIRS?.split(',') || [],
   cacheSize: parseInt(process.env.CACHE_SIZE || '100'),
-  maxParallelOps: parseInt(process.env.MAX_PARALLEL || '16'),
+  maxParallelOps: parseInt(process.env.MAX_PARALLEL || '20'),
 };
 
 // Initialize core systems

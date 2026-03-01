@@ -7,7 +7,7 @@ export function setupSearchTools(): Tool[] {
       description: `Fast parallel search with indexing.
       
 Features:
-- Parallel search across all CPU cores (16x faster on your i7-13700K)
+- Parallel search across all CPU cores (20x faster on your i7-14700K)
 - Smart indexing for frequently searched directories
 - Streaming results (see matches as they're found)
 - File name and content search
