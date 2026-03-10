@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import os from 'os';
 
 let transactionCounter = 0;
 
@@ -21,7 +22,7 @@ export interface Transaction {
 
 export class TransactionManager {
   private activeTransactions = new Map<string, Transaction>();
-  private tempDir = path.join(process.cwd(), '.efs-temp');
+  private tempDir = path.join(os.tmpdir(), '.efs-temp');
 
   constructor() {
     this.ensureTempDir();
