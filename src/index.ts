@@ -76,7 +76,7 @@ const fileWriter = new FileWriter(cache);
 
 // Create MCP server
 const server = new Server(
-  { name: 'enhanced-filesystem', version: '0.11.0' },
+  { name: 'enhanced-filesystem', version: '0.12.0' },
   { capabilities: { tools: {} } }
 );
 
@@ -201,8 +201,21 @@ async function handleWrite(args: any): Promise<MCPResponse> {
 
 async function handleEdit(args: any): Promise<MCPResponse> {
   try {
-    const { path: filePath, oldText, newText, count } = args;
-    const result = await editFile(filePath, { oldText, newText, count });
+    const { path: filePath, oldText, newText, count, dryRun } = args;
+    const result = await editFile(filePath, { oldText, newText, count, dryRun });
+    if (result.dryRun) {
+      const lines: string[] = [
+        `🔍 Dry run: ${filePath}`,
+        `Replacements: ${result.replacements} | ${result.originalSize} → ${result.newSize} bytes (no write)`,
+      ];
+      if (result.preview && result.preview.excerpts.length > 0) {
+        lines.push('', 'Preview (up to 3 excerpts):');
+        result.preview.excerpts.forEach((ex, i) => {
+          lines.push(`\n[${i + 1}] BEFORE:\n${ex.before}\n[${i + 1}] AFTER:\n${ex.after}`);
+        });
+      }
+      return { content: [{ type: 'text', text: lines.join('\n') }] };
+    }
     return {
       content: [{
         type: 'text',

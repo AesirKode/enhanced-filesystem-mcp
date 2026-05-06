@@ -40,7 +40,7 @@ export function setupFileTools(
     },
     {
       name: 'efs_edit',
-      description: "Surgical find/replace in a file. oldText must be unique. count: default 1, use -1 for all occurrences. Creates automatic backup.",
+      description: "Surgical find/replace in a file. oldText must be unique. count: default 1, use -1 for all occurrences. Set dryRun=true to preview the change without writing. Creates automatic backup.",
       inputSchema: {
         type: 'object',
         properties: {
@@ -48,6 +48,7 @@ export function setupFileTools(
           oldText: { type: 'string', description: 'Text to find' },
           newText: { type: 'string', description: 'Replacement text' },
           count: { type: 'number', description: 'Replacement count (-1 = all)' },
+          dryRun: { type: 'boolean', description: 'Preview only — do not write to disk. Returns excerpts of the change.' },
           range: { type: 'string', description: 'Excel range (optional)' },
         },
         required: ['path', 'oldText', 'newText'],
