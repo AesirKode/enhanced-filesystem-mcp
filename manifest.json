@@ -1,0 +1,99 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/mcpb/main/schemas/mcpb-manifest-latest.schema.json",
+  "manifest_version": "0.3",
+  "name": "enhanced-filesystem-mcp",
+  "display_name": "Enhanced Filesystem MCP",
+  "version": "0.13.0",
+  "description": "High-performance MCP server for filesystem operations with caching, parallel execution, Git, Ollama, HTTP, SSH, and Windows automation",
+  "long_description": "26 tools across file I/O, search, Git, process management, Ollama LLM integration, HTTP, SSH, and Windows UI automation. ESM Node server with LRU caching, parallel execution control, and atomic batch operations with rollback. No native dependencies.",
+  "author": {
+    "name": "David Robertson",
+    "email": "david@aesirkode.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AesirKode/enhanced-filesystem-mcp"
+  },
+  "homepage": "https://github.com/AesirKode/enhanced-filesystem-mcp",
+  "license": "MIT",
+  "keywords": ["mcp", "filesystem", "performance", "caching", "parallel", "git", "ollama", "windows"],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/index.js"],
+      "env": {
+        "ALLOWED_DIRS": "${user_config.allowed_dirs}",
+        "CACHE_SIZE": "${user_config.cache_size}",
+        "MAX_PARALLEL": "${user_config.max_parallel}",
+        "MODELS_DIR": "${user_config.models_dir}"
+      }
+    }
+  },
+  "user_config": {
+    "allowed_dirs": {
+      "type": "string",
+      "title": "Allowed Directories",
+      "description": "Comma-separated directory paths the server is permitted to operate on (e.g. D:\\Projects,D:\\Models,D:\\Tools). Use full paths, not drive letters alone. For UNC, use the full share path like \\\\host\\share.",
+      "default": "D:\\Projects,D:\\Models,D:\\Tools",
+      "required": true
+    },
+    "cache_size": {
+      "type": "number",
+      "title": "Cache Size",
+      "description": "LRU cache entry count",
+      "default": 100,
+      "min": 10,
+      "max": 10000
+    },
+    "max_parallel": {
+      "type": "number",
+      "title": "Max Parallel Operations",
+      "description": "Maximum concurrent file operations (defaults match i7-14700K core count)",
+      "default": 20,
+      "min": 1,
+      "max": 64
+    },
+    "models_dir": {
+      "type": "string",
+      "title": "Models Directory",
+      "description": "Base path for download_tool auto-placement (HuggingFace, CivitAI, etc.)",
+      "default": "D:\\Models"
+    }
+  },
+  "tools": [
+    { "name": "efs_read", "description": "Read any file with caching and pagination" },
+    { "name": "efs_write", "description": "Write files of any size with no chunking" },
+    { "name": "efs_edit", "description": "Surgical find/replace with dryRun preview" },
+    { "name": "efs_list", "description": "Directory listing with depth and pattern filters" },
+    { "name": "efs_info", "description": "File metadata: size, type, timestamps" },
+    { "name": "efs_delete", "description": "Delete files or directories" },
+    { "name": "efs_move", "description": "Move or rename files and directories" },
+    { "name": "efs_search", "description": "Parallel file and content search" },
+    { "name": "efs_batch", "description": "Atomic multi-operation execution with rollback" },
+    { "name": "efs_git", "description": "Git operations: status, diff, log, blame, commit" },
+    { "name": "efs_exec", "description": "Shell command execution" },
+    { "name": "efs_python", "description": "Python with persistent sessions" },
+    { "name": "process_tool", "description": "Service and GPU management with NVIDIA stats" },
+    { "name": "ollama_tool", "description": "Ollama LLM: generate, chat, pull, manage models" },
+    { "name": "http_tool", "description": "HTTP client with auth, retry, file download" },
+    { "name": "json_tool", "description": "Deep JSON operations with JSONPath queries" },
+    { "name": "archive_tool", "description": "Zip operations: create, extract, list, add" },
+    { "name": "hash_tool", "description": "File hashing: MD5, SHA1, SHA256, SHA512" },
+    { "name": "clipboard_tool", "description": "System clipboard read and write" },
+    { "name": "download_tool", "description": "Smart downloads from CivitAI, HuggingFace, URLs" },
+    { "name": "model_tool", "description": "GGUF and Safetensors inspection without loading" },
+    { "name": "yaml_tool", "description": "YAML and TOML config parsing and writing" },
+    { "name": "diff_tool", "description": "File and directory comparison" },
+    { "name": "windows_tool", "description": "Windows UI automation: keyboard, mouse, screenshots" },
+    { "name": "analysis_tool", "description": "TypeScript and JavaScript code structure analysis" },
+    { "name": "ssh_tool", "description": "SSH client with SFTP support" }
+  ],
+  "compatibility": {
+    "platforms": ["win32"],
+    "runtimes": {
+      "node": ">=20.0.0"
+    }
+  }
+}

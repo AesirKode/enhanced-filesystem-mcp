@@ -31,7 +31,6 @@ import { executeModelOperation } from './core/model.js';
 import { executeYamlOperation } from './core/yaml.js';
 import { executeDiffOperation } from './core/diff.js';
 import { executeWindowsOperation, WindowsToolArgs } from './core/windows.js';
-import { executeSqliteOperation } from './tools/sqlite-ops.js';
 import { pythonSessionManager } from './core/python-session.js';
 
 // Tool handlers
@@ -47,7 +46,6 @@ import { archiveTool, hashTool, clipboardTool, modelTool, yamlTool, diffTool } f
 import { downloadTool } from './tools/download-ops.js';
 import { windowsTool } from './tools/windows-ops.js';
 import { analysisTool, executeAnalysisOperation } from './tools/analysis-ops.js';
-import { sqliteTool } from './tools/sqlite-ops.js';
 import { sshTool, executeSshOperation } from './tools/ssh-ops.js';
 
 // Process execution
@@ -76,7 +74,7 @@ const fileWriter = new FileWriter(cache);
 
 // Create MCP server
 const server = new Server(
-  { name: 'enhanced-filesystem', version: '0.12.0' },
+  { name: 'enhanced-filesystem', version: '0.13.0' },
   { capabilities: { tools: {} } }
 );
 
@@ -92,7 +90,7 @@ function registerTools() {
   tools.push(...setupHttpTools());
   tools.push(...setupJsonTools());
   tools.push(archiveTool, hashTool, clipboardTool, downloadTool, modelTool, yamlTool, diffTool);
-  tools.push(windowsTool, analysisTool, sqliteTool, sshTool);
+  tools.push(windowsTool, analysisTool, sshTool);
 }
 
 // ── Shared response helpers ───────────────────────────────────────────────────
@@ -150,7 +148,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'diff_tool':    return wrap('Diff', () => executeDiffOperation(args as any));
       case 'windows_tool': return wrap('Windows', () => executeWindowsOperation(args as unknown as WindowsToolArgs));
       case 'analysis_tool': return wrap('Analysis', () => executeAnalysisOperation(args as any));
-      case 'sqlite_tool':  return wrap('SQLite', () => executeSqliteOperation(args as any));
       case 'ssh_tool':     return wrap('SSH', () => executeSshOperation(args as any));
       case 'http_tool': {
         const response = await executeHttpRequest(args as any);
@@ -371,7 +368,7 @@ async function handlePython(args: any): Promise<MCPResponse> {
 // ── Start server ──────────────────────────────────────────────────────────────
 
 async function main() {
-  console.error('Enhanced Filesystem MCP Server v0.11.0 starting...');
+  console.error('Enhanced Filesystem MCP Server v0.13.0 starting...');
   registerTools();
   console.error(`Registered ${tools.length} tools`);
   const transport = new StdioServerTransport();

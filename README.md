@@ -2,12 +2,12 @@
 
 [![CI](https://github.com/AesirKode/enhanced-filesystem-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/AesirKode/enhanced-filesystem-mcp/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-0.11.0-blue)](#)
+[![Version](https://img.shields.io/badge/version-0.13.0-blue)](#)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 High-performance [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server giving AI agents advanced filesystem and automation capabilities on Windows.
 
-**27 tools** across file I/O, search, Git, process management, Ollama, HTTP, SQLite, SSH, Windows UI automation, and more — all from a single server.
+**26 tools** across file I/O, search, Git, process management, Ollama, HTTP, SSH, Windows UI automation, and more — all from a single server.
 
 ---
 
@@ -43,7 +43,7 @@ Add to your `claude_desktop_config.json`:
 
 ---
 
-## The Toolkit (27 Tools)
+## The Toolkit (26 Tools)
 
 ### File Operations
 | Tool | Purpose |
@@ -85,7 +85,6 @@ Add to your `claude_desktop_config.json`:
 | `diff_tool` | File and directory comparison |
 | `windows_tool` | Windows UI automation: keyboard, mouse, screenshots |
 | `analysis_tool` | TypeScript/JS code structure analysis |
-| `sqlite_tool` | SQLite database operations |
 | `ssh_tool` | SSH client with SFTP |
 
 ---
